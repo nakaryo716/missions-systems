@@ -3,7 +3,7 @@ use crate::{
     repository::user_repository::UserRepository,
 };
 
-use super::{password_hash_service::PasswordHashService, uuid_service::UUIDService};
+use super::{password_hash_service::{self, PasswordHashService}, uuid_service::{self, UUIDService}};
 
 pub struct UserService<P, R, U>
 where
@@ -22,6 +22,14 @@ where
     R: UserRepository,
     U: UUIDService,
 {
+    pub fn new(password_hasher: P, user_repo: R, uuid_service: U) -> Self {
+        Self {
+            password_hasher,
+            user_repo,
+            uuid_service,
+        }
+    }
+
     pub async fn create_user(
         &self,
         user_input: UserInput,
