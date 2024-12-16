@@ -50,16 +50,6 @@ where
         Ok(user_id)
     }
 
-    pub async fn read_user_by_id(&self, user_id: UserId) -> Result<User, UserServiceError> {
-        let user = self.user_repo.find_by_id(&user_id).await?;
-        Ok(user)
-    }
-
-    pub async fn read_user_by_email(&self, email: String) -> Result<User, UserServiceError> {
-        let user = self.user_repo.find_by_email(&email).await?;
-        Ok(user)
-    }
-
     pub async fn update_user(&self, user: User) -> Result<(), UserServiceError> {
         self.user_repo.update(&user).await?;
         Ok(())
@@ -68,10 +58,5 @@ where
     pub async fn delete_user(&self, user_id: UserId) -> Result<(), UserServiceError> {
         self.user_repo.delete(&user_id).await?;
         Ok(())
-    }
-
-    pub async fn is_user_exist(&self, user_id: UserId) -> Result<bool, UserServiceError> {
-        let flag = self.user_repo.is_exist(&user_id).await?;
-        Ok(flag)
     }
 }
