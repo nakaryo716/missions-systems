@@ -4,25 +4,33 @@ use thiserror::Error;
 pub enum TokenServiceError {
     // トークン生成時のエラー
     #[error("failed to signin")]
-    SigningError(String),             // JWTの署名プロセス中のエラー
+    /// JWTの署名プロセス中のエラー
+    SigningError(String),
+    /// Base64エンコードやJSONシリアライズエラー
     #[error("token encode error")]
-    EncodingError(String),            // Base64エンコードやJSONシリアライズエラー
+    EncodingError(String),
+    /// Claimsが不足または無効
     #[error("claims validation error")]
-    ClaimsValidationError(String),    // Claimsが不足または無効
+    ClaimsValidationError(String),
+    /// セッションストレージへの保存エラー
     #[error("session storage error")]
-    StorageError(String),             // セッションストレージへの保存エラー
+    StorageError(String),
 
     // トークン検証時のエラー
+    /// トークンが有効期限切れ
     #[error("expired token")]
-    TokenExpired,                     // JWTが有効期限切れ
+    TokenExpired,
+    /// トークンが改ざんされている、不正な形式
     #[error("invalid token")]
-    TokenInvalid(String),             // トークンが改ざんされている、不正な形式
+    TokenInvalid(String),
+    /// セッションIDやJWT内容が一致しない
     #[error("mismatch data")]
-    DataMismatch(String),             // セッションIDやJWT内容が一致しない
+    DataMismatch(String),
+    /// DBエラー（セッション検証時）
     #[error("database error")]
-    DatabaseError(String),            // DBエラー（セッション検証時）
+    DatabaseError(String),
 
-    // その他のエラー
+    /// その他のエラー
     #[error("unexpected error")]
-    UnknownError(String),             // その他の未分類エラー
+    UnknownError(String),
 }
