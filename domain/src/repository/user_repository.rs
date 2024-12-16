@@ -40,6 +40,6 @@ pub trait UserRepository {
     /// Userが存在するか確認する
     fn is_exist(
         &self,
-        id: &UserId,
+        email: &str,
     ) -> Pin<Box<dyn Future<Output = Result<bool, RepositoryError>> + Send + 'static>>;
 }
