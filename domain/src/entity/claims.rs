@@ -6,3 +6,9 @@ pub struct Claims {
     pub user_id: UserId,
     pub exp: usize,
 }
+
+impl Claims {
+    pub fn new(user_id: UserId, exp: usize) -> Self {
+        Self { user_id, exp }
+    }
+}

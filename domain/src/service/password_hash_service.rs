@@ -15,5 +15,5 @@ pub trait PasswordHashService {
         &self,
         password: &str,
         hash_password: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<(), HashServiceError>> + Send + 'static>>;
+    ) -> Pin<Box<dyn Future<Output = Result<bool, HashServiceError>> + Send + 'static>>;
 }
