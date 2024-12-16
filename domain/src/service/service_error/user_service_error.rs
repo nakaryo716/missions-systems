@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use super::hash_error::HashServiceError;
+use super::{hash_error::HashServiceError, token_service_error::TokenServiceError};
 use crate::repository::repository_error::RepositoryError;
 
 #[derive(Debug, Error)]
@@ -9,6 +9,10 @@ pub enum UserServiceError {
     HashError(String),
     #[error("Repository error: {0}")]
     RepositoryError(String),
+    #[error("user already exists")]
+    UserAlreadyExists,
+    #[error("token error: {0}")]
+    TokenError(TokenServiceError),
 }
 
 impl From<HashServiceError> for UserServiceError {
@@ -20,5 +24,11 @@ impl From<HashServiceError> for UserServiceError {
 impl From<RepositoryError> for UserServiceError {
     fn from(value: RepositoryError) -> Self {
         UserServiceError::RepositoryError(value.to_string())
+    }
+}
+
+impl From<TokenServiceError> for UserServiceError {
+    fn from(value: TokenServiceError) -> Self {
+        UserServiceError::TokenError(value)
     }
 }
