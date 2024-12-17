@@ -7,8 +7,7 @@ use crate::{
 };
 
 use super::{
-    token_service::TokenService,
-    uuid_service::UUIDService,
+    service_error::daily_mission_service_error::DailyMissionServiceError, token_service::TokenService, uuid_service::UUIDService
 };
 
 #[derive(Debug, Clone)]
@@ -22,8 +21,6 @@ where
     uuid_service: U,
     mission_repo: M,
 }
-
-type MyError = Box<dyn std::error::Error>;
 
 impl<T, U, M> DailyMissionService<T, U, M>
 where
@@ -43,7 +40,7 @@ where
         &self,
         token: Token,
         mission_payload: DailyMissionInput,
-    ) -> Result<DailyMissionId, MyError> {
+    ) -> Result<DailyMissionId, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
         let mission_id = DailyMissionId(self.uuid_service.generate());
         let mission = DailyMissionBuilder::new()
@@ -61,13 +58,13 @@ where
         &self,
         token: Token,
         mission_id: DailyMissionId,
-    ) -> Result<DailyMission, MyError> {
+    ) -> Result<DailyMission, DailyMissionServiceError> {
         self.token_service.verify(token)?;
         let mission = self.mission_repo.find_by_id(&mission_id).await?;
         Ok(mission)
     }
 
-    pub async fn find_all(&self, token: Token) -> Result<Vec<DailyMission>, MyError> {
+    pub async fn find_all(&self, token: Token) -> Result<Vec<DailyMission>, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
         let missions = self.mission_repo.find_by_user_id(&user_id).await?;
         Ok(missions)
@@ -78,7 +75,7 @@ where
         token: Token,
         mission_id: DailyMissionId,
         mission_payload: DailyMissionInput,
-    ) -> Result<(), MyError> {
+    ) -> Result<(), DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
         let mission = DailyMissionBuilder::new()
             .user_id(&user_id)
@@ -95,13 +92,13 @@ where
         &self,
         token: Token,
         mission_id: DailyMissionId,
-    ) -> Result<(), MyError> {
+    ) -> Result<(), DailyMissionServiceError> {
         self.token_service.verify(token)?;
         self.mission_repo.set_complete_true(&mission_id).await?;
         Ok(())
     }
 
-    pub async fn delete(&self, token: Token, mission_id: DailyMissionId) -> Result<(), MyError> {
+    pub async fn delete(&self, token: Token, mission_id: DailyMissionId) -> Result<(), DailyMissionServiceError> {
         self.token_service.verify(token)?;
         self.mission_repo.delete(&mission_id).await?;
         Ok(())
