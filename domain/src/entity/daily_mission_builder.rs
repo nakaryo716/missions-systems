@@ -9,31 +9,31 @@ pub struct DailyMissionBuilder {
 }
 
 impl DailyMissionBuilder {
-    fn new() -> Self {
+    pub fn new() -> Self {
         DailyMissionBuilder::default()
     }
 
-    fn set_user_id(mut self, user_id: UserId) -> DailyMissionBuilder {
-        self.user_id = user_id;
+    pub fn user_id(mut self, user_id: &UserId) -> DailyMissionBuilder {
+        self.user_id = user_id.to_owned();
         self
     }
 
-    fn set_mission_id(mut self, mission_id: DailyMissionId) -> DailyMissionBuilder {
-        self.mission_id = mission_id;
+    pub fn mission_id(mut self, mission_id: &DailyMissionId) -> DailyMissionBuilder {
+        self.mission_id = mission_id.to_owned();
         self
     }
 
-    fn set_title(mut self, title: &str) -> DailyMissionBuilder {
+    pub fn title(mut self, title: &str) -> DailyMissionBuilder {
         self.title = title.to_string();
         self
     }
 
-    fn set_description(mut self, description: Option<String>) -> DailyMissionBuilder {
-        self.description = description;
+    pub fn description(mut self, description: &Option<String>) -> DailyMissionBuilder {
+        self.description = description.to_owned();
         self
     }
 
-    fn build(self) -> DailyMission {
+    pub fn build(self) -> DailyMission {
         DailyMission {
             user_id: self.user_id,
             mission_id: self.mission_id,
