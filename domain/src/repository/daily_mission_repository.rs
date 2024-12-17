@@ -1,8 +1,7 @@
 use std::{future::Future, pin::Pin};
 
 use crate::entity::{
-    daily_mission::DailyMission, daily_mission_builder::DailyMissionBuilder,
-    daily_mission_id::DailyMissionId, user_id::UserId,
+    daily_mission::DailyMission, daily_mission_id::DailyMissionId, user_id::UserId,
 };
 
 use super::repository_error::RepositoryError;
@@ -13,7 +12,7 @@ pub trait DailyMissionRepository {
     /// DailyMissionデータを保存する
     fn create(
         &self,
-        builder: &DailyMissionBuilder,
+        builder: &DailyMission,
     ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'static>>;
 
     /// DailyMissionIdを使用して一つのDailyMissionデータを取得する
