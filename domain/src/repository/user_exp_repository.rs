@@ -10,16 +10,19 @@ pub trait UserExpRepository {
     /// UserExpを初期化(データベースに登録する)
     /// そのため各ユーザー
     fn init_exp(
+        &self,
         user_id: &UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
 
     /// UserExpを取得する
     fn find_by_user_id(
+        &self,
         user_id: &UserId,
     ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'static>>;
 
     /// UserExpの経験値を増加(変更)させる
     fn add_exp(
+        &self,
         user_id: &UserId,
         additional_exp: u64,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
