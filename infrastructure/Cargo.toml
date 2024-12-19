@@ -9,3 +9,4 @@ async-trait = "0.1.83"
 domain = { path = "../domain" }
 rand_core = { version = "0.6.4", features = ["getrandom"] }
 tokio = { version = "1.42.0", features = ["full"] }
+uuid = { version = "1.11.0", features = ["v4", "fast-rng"] }
