@@ -1,0 +1,11 @@
+[package]
+name = "infrastructure"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+argon2 = "0.5.3"
+async-trait = "0.1.83"
+domain = { path = "../domain" }
+rand_core = { version = "0.6.4", features = ["getrandom"] }
+tokio = { version = "1.42.0", features = ["full"] }
