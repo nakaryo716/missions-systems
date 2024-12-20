@@ -2,3 +2,6 @@
 resolver = "2"
 
 members = ["domain", "infrastructure"]
+
+[workspace.dependencies]
+serde ={ version = "1.0.216", features = ["derive"]}
