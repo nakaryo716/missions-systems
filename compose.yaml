@@ -1,0 +1,17 @@
+services:
+  db:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    ports:
+      - "13306:3306"
+    env_file:
+      - mysql_config
+    volumes:
+      - missions_vm:/var/lib/mysql/
+    networks:
+      - missions_nw
+volumes:
+  missions_vm:
+networks:
+  missions_nw:
