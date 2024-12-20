@@ -1,2 +1,8 @@
+# 生成物
 /target
+
+# IDE
 /.vscode
+
+# Key
+jwt_key.txt
