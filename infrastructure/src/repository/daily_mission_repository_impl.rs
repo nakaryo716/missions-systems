@@ -107,10 +107,12 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 SET
                 title = ?,
                 descriptions = ?
+                WHERE mission_id = ?
                 "#,
             )
             .bind(&mission.title)
             .bind(&mission.description)
+            .bind(&mission.mission_id.0)
             .execute(&pool)
             .await
             .map_err(|e| to_repo_err(e))?;
@@ -164,7 +166,8 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
 
 #[cfg(test)]
 mod test {
-    use base64::{prelude::BASE64_STANDARD, Engine};
+    use std::collections::HashSet;
+
     use domain::{
         entity::{
             daily_mission::DailyMission, daily_mission_builder::DailyMissionBuilder,
@@ -172,8 +175,8 @@ mod test {
         },
         repository::daily_mission_repository::DailyMissionRepository,
     };
-    use rand_core::{OsRng, RngCore};
     use sqlx::MySqlPool;
+    use uuid::Uuid;
 
     use crate::repository::daily_mission_repository_impl::DailyMissionRepositoryImpl;
 
@@ -204,10 +207,12 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let mission = gen_daily_mission(&user_id, Some("description"));
-        create_daily_batch(mission.clone()).await?;
+        let pool = gen_pool().await?;
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let mission = gen_daily_mission(&user_id, Some("description"));
+        create_daily_batch(pool.clone(), mission.clone()).await?;
+        let service = DailyMissionRepositoryImpl::new(pool);
+
         let returned_mission = service.find_by_id(&mission.mission_id).await?;
         assert_eq!(returned_mission, mission);
 
@@ -221,10 +226,12 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let mission = gen_daily_mission(&user_id, None);
-        create_daily_batch(mission.clone()).await?;
+        let pool = gen_pool().await?;
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let mission = gen_daily_mission(&user_id, None);
+        create_daily_batch(pool.clone(), mission.clone()).await?;
+
+        let service = DailyMissionRepositoryImpl::new(pool);
         let returned_mission = service.find_by_id(&mission.mission_id).await?;
         assert_eq!(returned_mission, mission);
 
@@ -238,16 +245,24 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let mut generated_missions = Vec::new();
-        for _ in 0..10 {
+        let pool = gen_pool().await?;
+
+        let mut generated_missions = HashSet::new();
+        for _ in 0..1000 {
             let mission = gen_daily_mission(&user_id, None);
-            generated_missions.push(mission.clone());
-            create_daily_batch(mission).await?;
+            generated_missions.insert(mission.clone());
+            create_daily_batch(pool.clone(), mission).await?;
         }
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let service = DailyMissionRepositoryImpl::new(pool);
         let returned_mission = service.find_by_user_id(&UserId(user_id.clone())).await?;
-        assert_eq!(returned_mission, generated_missions);
+
+        let mut missions = HashSet::new();
+        returned_mission.iter().for_each(|a| {
+            missions.insert(a.to_owned());
+        });
+        assert_eq!(missions.len(), generated_missions.len());
+        assert_eq!(missions, generated_missions);
 
         delete_test_user(&user_id).await?;
         Ok(())
@@ -258,12 +273,14 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
+        let pool = gen_pool().await?;
+
         let mut mission = gen_daily_mission(&user_id, None);
-        create_daily_batch(mission.clone()).await?;
+        create_daily_batch(pool.clone(), mission.clone()).await?;
 
-        update_mission(&mut mission);
+        helper_update_mission(&mut mission);
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let service = DailyMissionRepositoryImpl::new(pool);
         service.update(&mission).await?;
 
         let returned_mission = service.find_by_id(&mission.mission_id).await?;
@@ -279,10 +296,12 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let mission = gen_daily_mission(&user_id, Some("description"));
-        create_daily_batch(mission.clone()).await?;
+        let pool = gen_pool().await?;
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let mission = gen_daily_mission(&user_id, Some("description"));
+        create_daily_batch(pool.clone(), mission.clone()).await?;
+
+        let service = DailyMissionRepositoryImpl::new(pool);
         service.set_complete_true(&mission.mission_id).await?;
 
         let returned_mission = service.find_by_id(&mission.mission_id).await?;
@@ -304,10 +323,12 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let mission = gen_daily_mission(&user_id, Some("description"));
-        create_daily_batch(mission.clone()).await?;
+        let pool = gen_pool().await?;
 
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+        let mission = gen_daily_mission(&user_id, Some("description"));
+        create_daily_batch(pool.clone(), mission.clone()).await?;
+
+        let service = DailyMissionRepositoryImpl::new(pool);
         service.delete(&mission.mission_id).await?;
 
         if let Ok(_) = service.find_by_id(&mission.mission_id).await {
@@ -326,10 +347,7 @@ mod test {
     }
 
     fn gen_random_string() -> String {
-        let mut key = [0, 32];
-        OsRng.fill_bytes(&mut key);
-        let random_string = BASE64_STANDARD.encode(key);
-        random_string
+        Uuid::new_v4().to_string()
     }
 
     async fn create_test_user(user_id: &str) -> MyResult<()> {
@@ -365,20 +383,17 @@ mod test {
     }
 
     fn gen_daily_mission(user_id: &str, description: Option<&str>) -> DailyMission {
-        let mut key = [0, 32];
-        OsRng.fill_bytes(&mut key);
-        let random_string = BASE64_STANDARD.encode(key);
+        let random_string = Uuid::new_v4().to_string();
 
         DailyMissionBuilder::new()
             .user_id(&UserId(user_id.to_string()))
-            .mission_id(&DailyMissionId(format!("mission_id_{}", random_string)))
+            .mission_id(&DailyMissionId(format!("{}", random_string)))
             .title(&format!("title_{}", random_string))
-            // .description(&Some(format!("description_{}", random_string)))
             .description(&description.map(|e| e.to_owned()))
             .build()
     }
 
-    fn update_mission(daily_mission: &mut DailyMission) {
+    fn helper_update_mission(daily_mission: &mut DailyMission) {
         daily_mission.title = "updated".to_string();
 
         if let Some(_) = daily_mission.description {
@@ -390,8 +405,8 @@ mod test {
         daily_mission.is_complete = !daily_mission.is_complete;
     }
 
-    async fn create_daily_batch(mission: DailyMission) -> MyResult<()> {
-        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+    async fn create_daily_batch(pool: MySqlPool, mission: DailyMission) -> MyResult<()> {
+        let service = DailyMissionRepositoryImpl::new(pool);
         service.create(&mission).await?;
         Ok(())
     }
