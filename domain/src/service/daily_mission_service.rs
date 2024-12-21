@@ -7,7 +7,8 @@ use crate::{
 };
 
 use super::{
-    service_error::daily_mission_service_error::DailyMissionServiceError, token_service::TokenService, uuid_service::UUIDService
+    service_error::daily_mission_service_error::DailyMissionServiceError,
+    token_service::TokenService, uuid_service::UUIDService,
 };
 
 #[derive(Debug, Clone)]
@@ -64,7 +65,10 @@ where
         Ok(mission)
     }
 
-    pub async fn find_all(&self, token: Token) -> Result<Vec<DailyMission>, DailyMissionServiceError> {
+    pub async fn find_all(
+        &self,
+        token: Token,
+    ) -> Result<Vec<DailyMission>, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
         let missions = self.mission_repo.find_by_user_id(&user_id).await?;
         Ok(missions)
@@ -98,7 +102,11 @@ where
         Ok(())
     }
 
-    pub async fn delete(&self, token: Token, mission_id: DailyMissionId) -> Result<(), DailyMissionServiceError> {
+    pub async fn delete(
+        &self,
+        token: Token,
+        mission_id: DailyMissionId,
+    ) -> Result<(), DailyMissionServiceError> {
         self.token_service.verify(token)?;
         self.mission_repo.delete(&mission_id).await?;
         Ok(())
