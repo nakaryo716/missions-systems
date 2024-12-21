@@ -1,6 +1,6 @@
 use super::{daily_mission_id::DailyMissionId, user_id::UserId};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DailyMission {
     pub user_id: UserId,
     pub mission_id: DailyMissionId,
