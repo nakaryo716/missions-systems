@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 thiserror = "2.0.7"
 serde ={ workspace = true }
+sqlx = { workspace = true }
