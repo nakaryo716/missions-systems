@@ -4,7 +4,8 @@ use crate::{
 };
 
 use super::{
-    level_convert::LevelConvert, service_error::exp_error::ExpServiceError, token_service::TokenService,
+    level_convert::LevelConvert, service_error::exp_error::ExpServiceError,
+    token_service::TokenService,
 };
 
 /// 経験値関連のサービス実装
@@ -46,7 +47,11 @@ where
     }
 
     // ユーザーの経験値を追加する(delta値)
-    pub async fn add_experience(&self, token: Token, additional_exp: u64) -> Result<(), ExpServiceError> {
+    pub async fn add_experience(
+        &self,
+        token: Token,
+        additional_exp: u64,
+    ) -> Result<(), ExpServiceError> {
         let user_id = self.token_service.verify(token)?;
         // TODO: ユーザーが持つ経験値を取得しオーバーフローしないか検証する
         //       経験値が最大であったらエラーを返す
