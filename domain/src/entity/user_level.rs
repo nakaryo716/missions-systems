@@ -6,7 +6,7 @@ use super::{user_exp::UserExp, user_id::UserId};
 pub struct UserLevel {
     pub user_id: UserId,
     pub experience_points: i64,
-    pub level: i32,
+    pub level: u32,
 }
 
 impl UserLevel {
