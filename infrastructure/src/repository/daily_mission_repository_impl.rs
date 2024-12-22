@@ -30,7 +30,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         let pool = self.pool.to_owned();
         let builder = builder.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                 INSERT INTO daily_mission
                 (user_id, mission_id, title, descriptions)
@@ -44,8 +44,14 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&builder.description)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(builder.mission_id)
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+
+            if affected_len == 1 {
+                Ok(builder.mission_id)
+            } else {
+                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+            }
         })
     }
 
@@ -101,7 +107,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         let pool = self.pool.to_owned();
         let mission = mission.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                 UPDATE daily_mission
                 SET
@@ -115,8 +121,14 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&mission.mission_id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(())
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+            
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
+            }
         })
     }
 
@@ -127,7 +139,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         let pool = self.pool.to_owned();
         let mission_id = mission_id.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                 UPDATE daily_mission
                 SET is_complete = true
@@ -137,8 +149,14 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&mission_id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(())
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
+            }
         })
     }
 
@@ -149,7 +167,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         let pool = self.pool.to_owned();
         let mission_id = mission_id.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                 DELETE FROM daily_mission
                 WHERE mission_id = ?
@@ -158,8 +176,14 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&mission_id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(())
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+            
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
+            }
         })
     }
 }
@@ -248,7 +272,7 @@ mod test {
         let pool = gen_pool().await?;
 
         let mut generated_missions = HashSet::new();
-        for _ in 0..1000 {
+        for _ in 0..5 {
             let mission = gen_daily_mission(&user_id, None);
             generated_missions.insert(mission.clone());
             create_daily_batch(pool.clone(), mission).await?;

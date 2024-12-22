@@ -27,7 +27,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
         let pool = self.pool.to_owned();
         let user_id = user_id.to_owned();
         Box::pin(async move {
-            let result = sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                     INSERT INTO user_exp
                     (user_id) VALUES (?)
@@ -36,12 +36,14 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .bind(&user_id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
 
-            if result.rows_affected() == 0 {
-                return Err(RepositoryError::NotFound);
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
             }
-            Ok(())
         })
     }
 
@@ -89,10 +91,11 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .await
             .map_err(|e| to_repo_err(e))?;
 
-            if result.rows_affected() == 0 {
-                return Err(RepositoryError::NotFound);
+            if result.rows_affected() == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
             }
-            Ok(())
         })
     }
 }

@@ -27,7 +27,7 @@ impl UserRepository for UserRepositoryImpl {
         let pool = self.pool.to_owned();
         let user_builder = user_builder.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                     INSERT INTO users
                     (user_id, user_name, email, password_hash)
@@ -41,8 +41,14 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user_builder.password_hash)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(user_builder.user_id)
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+            
+            if affected_len == 1 {
+                Ok(user_builder.user_id)
+            } else {
+                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+            }
         })
     }
 
@@ -95,7 +101,7 @@ impl UserRepository for UserRepositoryImpl {
         let pool = self.pool.to_owned();
         let user = user.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                     UPDATE users
                     SET
@@ -107,8 +113,14 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user.user_id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(())
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+            
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
+            }
         })
     }
 
@@ -119,7 +131,7 @@ impl UserRepository for UserRepositoryImpl {
         let pool = self.pool.to_owned();
         let id = id.to_owned();
         Box::pin(async move {
-            sqlx::query(
+            let affected_len = sqlx::query(
                 r#"
                     DELETE FROM users
                     WHERE user_id = ?
@@ -128,8 +140,14 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&id.0)
             .execute(&pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
-            Ok(())
+            .map_err(|e| to_repo_err(e))?
+            .rows_affected();
+            
+            if affected_len == 1 {
+                Ok(())
+            } else {
+                Err(RepositoryError::NotFound)
+            }
         })
     }
 
@@ -164,13 +182,12 @@ impl UserRepository for UserRepositoryImpl {
 
 #[cfg(test)]
 mod test {
-    use base64::{prelude::BASE64_STANDARD, Engine};
     use domain::{
         entity::{user::User, user_builder::UserBuilder, user_id::UserId},
         repository::user_repository::UserRepository,
     };
-    use rand_core::{OsRng, RngCore};
     use sqlx::MySqlPool;
+    use uuid::Uuid;
 
     use crate::repository::user_repository_impl::UserRepositoryImpl;
 
@@ -270,9 +287,7 @@ mod test {
 
     // Helper methods
     fn builder() -> (UserId, UserBuilder) {
-        let mut key = [0, 16];
-        OsRng.fill_bytes(&mut key);
-        let random_string = BASE64_STANDARD.encode(key);
+        let random_string = Uuid::new_v4().to_string();
 
         let user_id = UserId(format!("test_user_id_{}", random_string));
         let builder = UserBuilder {
