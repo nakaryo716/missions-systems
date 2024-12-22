@@ -50,7 +50,7 @@ where
     pub async fn add_experience(
         &self,
         token: Token,
-        additional_exp: u64,
+        additional_exp: i64,
     ) -> Result<(), ExpServiceError> {
         let user_id = self.token_service.verify(token)?;
         // TODO: ユーザーが持つ経験値を取得しオーバーフローしないか検証する

@@ -24,6 +24,6 @@ pub trait UserExpRepository {
     fn add_exp(
         &self,
         user_id: &UserId,
-        additional_exp: u64,
+        additional_exp: i64,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
 }

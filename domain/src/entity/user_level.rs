@@ -5,7 +5,7 @@ use super::{user_exp::UserExp, user_id::UserId};
 #[derive(Debug, Clone)]
 pub struct UserLevel {
     pub user_id: UserId,
-    pub experience_points: u64,
+    pub experience_points: i64,
     pub level: i32,
 }
 
