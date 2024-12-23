@@ -1,8 +1,9 @@
 [workspace]
 resolver = "2"
 
-members = ["domain", "infrastructure"]
+members = ["app_server", "domain", "infrastructure"]
 
 [workspace.dependencies]
+dotenvy = "0.15.7"
 serde = { version = "1.0.216", features = ["derive"]}
 sqlx = { version = "0.8.2", features = ["mysql", "runtime-tokio-rustls"]}
