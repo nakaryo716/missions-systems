@@ -1,8 +1,9 @@
+use serde::Serialize;
 use sqlx::{mysql::MySqlRow, FromRow, Row};
 
 use super::{daily_mission_id::DailyMissionId, user_id::UserId};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
 pub struct DailyMission {
     pub user_id: UserId,
     pub mission_id: DailyMissionId,
