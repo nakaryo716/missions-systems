@@ -1,8 +1,11 @@
+use serde::Serialize;
+
 use crate::service::level_convert::LevelConvert;
 
 use super::{user_exp::UserExp, user_id::UserId};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UserLevel {
     pub user_id: UserId,
     pub experience_points: i64,

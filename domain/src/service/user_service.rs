@@ -55,13 +55,11 @@ where
             .password_hasher
             .hash_password(&user_input.password)
             .await?;
-        let builder = UserBuilder {
-            user_id,
-            user_name: user_input.user_name,
-            email: user_input.email,
-            password_hash,
-        };
-
+        let builder = UserBuilder::new()
+            .user_id(user_id)
+            .user_name(user_input.user_name)
+            .email(user_input.email)
+            .password_hash(password_hash);
         let user_id = self.user_repo.create(&builder).await?;
         Ok(user_id)
     }

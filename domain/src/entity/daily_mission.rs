@@ -4,6 +4,7 @@ use sqlx::{mysql::MySqlRow, FromRow, Row};
 use super::{daily_mission_id::DailyMissionId, user_id::UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DailyMission {
     pub user_id: UserId,
     pub mission_id: DailyMissionId,
