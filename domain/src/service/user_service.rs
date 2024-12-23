@@ -1,6 +1,7 @@
 use crate::{
     entity::{
-        token::Token, user::User, user_builder::UserBuilder, user_id::UserId, user_input::UserInput,
+        token::Token, user::User, user_builder::UserBuilder, user_id::UserId, user_info::UserInfo,
+        user_input::UserInput,
     },
     repository::user_repository::UserRepository,
 };
@@ -65,10 +66,10 @@ where
         Ok(user_id)
     }
 
-    pub async fn find_user(&self, token: Token) -> Result<User, UserServiceError> {
+    pub async fn get_user_info(&self, token: Token) -> Result<UserInfo, UserServiceError> {
         let user_id = self.token_service.verify(token)?;
         let user = self.user_repo.find_by_id(&user_id).await?;
-        Ok(user)
+        Ok(user.into())
     }
 
     pub async fn update_user(

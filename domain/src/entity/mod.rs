@@ -9,5 +9,6 @@ pub mod user;
 pub mod user_builder;
 pub mod user_exp;
 pub mod user_id;
+pub mod user_info;
 pub mod user_input;
 pub mod user_level;
