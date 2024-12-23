@@ -43,11 +43,13 @@ impl UserRepository for UserRepositoryImpl {
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
-            
+
             if affected_len == 1 {
                 Ok(user_builder.user_id)
             } else {
-                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+                Err(RepositoryError::DatabaseError(
+                    "Failed to insert".to_string(),
+                ))
             }
         })
     }
@@ -105,17 +107,21 @@ impl UserRepository for UserRepositoryImpl {
                 r#"
                     UPDATE users
                     SET
-                    user_name = ?
+                    user_name = ?,
+                    email = ?,
+                    password_hash = ?
                     WHERE user_id = ?
                 "#,
             )
             .bind(&user.user_name)
+            .bind(&user.email)
+            .bind(&user.password_hash)
             .bind(&user.user_id.0)
             .execute(&pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
-            
+
             if affected_len == 1 {
                 Ok(())
             } else {
@@ -142,7 +148,7 @@ impl UserRepository for UserRepositoryImpl {
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
-            
+
             if affected_len == 1 {
                 Ok(())
             } else {
@@ -236,7 +242,10 @@ mod test {
         let user_id = create_user_batch(expected_user_id.clone(), builder.clone()).await?;
 
         // Update fields
-        builder.user_name = "updated_user".to_string();
+        builder.user_name = format!("updated_user_name_{}", user_id.0);
+        builder.email = format!("updated_user_{}", user_id.0);
+        builder.password_hash = format!("updated_password_{}", user_id.0);
+
         let updated_user = User {
             user_id: user_id.clone(),
             user_name: builder.user_name.clone(),

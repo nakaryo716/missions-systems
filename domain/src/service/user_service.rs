@@ -72,20 +72,22 @@ where
         Ok(user.into())
     }
 
-    pub async fn update_user(
+    /// ユーザー名を変更する
+    /// emailとパスワードの変更は整合性が重要なため、別サービスとして提供する予定
+    pub async fn update_user_name(
         &self,
         token: Token,
-        user_input: UserInput,
+        update_user_name: String,
     ) -> Result<(), UserServiceError> {
         // トークンを持っているか検証
         let user_id = self.token_service.verify(token)?;
+        let stored_user = self.user_repo.find_by_id(&user_id).await?;        
         let user = User {
-            user_id,
-            user_name: user_input.user_name,
-            email: user_input.email,
-            password_hash: user_input.password,
+            user_id: stored_user.user_id,
+            user_name: update_user_name,
+            email: stored_user.email,
+            password_hash: stored_user.password_hash,
         };
-
         self.user_repo.update(&user).await?;
         Ok(())
     }
