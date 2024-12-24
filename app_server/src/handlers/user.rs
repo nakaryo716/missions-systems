@@ -1,7 +1,5 @@
 use axum::{
-    extract::{Query, State},
-    response::IntoResponse,
-    Json,
+    extract::{Query, State}, http::StatusCode, response::IntoResponse, Json
 };
 use domain::{entity::user_input::UserInput, service::user_service::UserService};
 use infrastructure::{
@@ -43,11 +41,11 @@ pub async fn user_info(
     State(pool): State<MySqlPool>,
 ) -> Result<impl IntoResponse, ServerError> {
     let service = user_service(pool);
-    service
+    let user_info = service
         .get_user_info(token)
         .await
         .map_err(|e| ServerError::UserErr(e))?;
-    Ok(())
+    Ok((StatusCode::OK, Json(user_info)))
 }
 
 pub async fn update_name(
