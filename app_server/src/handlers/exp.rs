@@ -1,4 +1,9 @@
-use axum::{extract::{Path, State}, http::StatusCode, response::IntoResponse, Json};
+use axum::{
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
+};
 use domain::service::user_exp_service::UserExpService;
 use infrastructure::{
     repository::user_exp_repository_impl::UserExpRepositoryImpl,
@@ -33,7 +38,7 @@ pub async fn add(
     Ok(())
 }
 
-fn user_exp_service(
+pub(super) fn user_exp_service(
     pool: MySqlPool,
 ) -> UserExpService<UserExpRepositoryImpl, LevelConvertImpl, TokenServiceImpl> {
     UserExpService::new(
