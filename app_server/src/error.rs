@@ -1,7 +1,7 @@
 use axum::{http::StatusCode, response::IntoResponse};
 use domain::service::service_error::{
     auth_service_error::AuthServiceError, daily_mission_service_error::DailyMissionServiceError,
-    exp_error::ExpServiceError,
+    exp_error::ExpServiceError, user_service_error::UserServiceError,
 };
 
 #[derive(Debug, Clone)]
@@ -9,6 +9,7 @@ pub enum ServerError {
     AuthError(AuthServiceError),
     DailyError(DailyMissionServiceError),
     UserExp(ExpServiceError),
+    UserErr(UserServiceError),
 }
 
 impl IntoResponse for ServerError {
@@ -48,6 +49,12 @@ impl IntoResponse for ServerError {
                 ExpServiceError::DetectedExpOverflow(_) => {
                     (StatusCode::BAD_REQUEST).into_response()
                 }
+            },
+            Self::UserErr(e) => match e {
+                UserServiceError::RepositoryError(_) => {
+                    (StatusCode::INTERNAL_SERVER_ERROR).into_response()
+                }
+                _ => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
             },
         }
     }
