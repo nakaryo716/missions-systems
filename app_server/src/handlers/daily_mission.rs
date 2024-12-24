@@ -22,11 +22,11 @@ pub async fn create(
     Json(mission_payload): Json<DailyMissionInput>,
 ) -> Result<impl IntoResponse, ServerError> {
     let service = daily_mission_service(pool);
-    let mission_id = service
+    service
         .create(token, mission_payload)
         .await
         .map_err(|e| ServerError::DailyError(e))?;
-    Ok((StatusCode::CREATED, Json(mission_id)))
+    Ok((StatusCode::CREATED, ()))
 }
 
 pub async fn get_one(
