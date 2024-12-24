@@ -30,5 +30,3 @@ pub fn app(pool: MySqlPool) -> Router {
         .route("/exp", get(exp::find).put(exp::add))
         .with_state(pool)
 }
-
-// fix daily create plane text
