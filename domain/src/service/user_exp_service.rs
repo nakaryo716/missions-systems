@@ -1,5 +1,5 @@
 use crate::{
-    entity::{token::Token, user_level::UserLevel},
+    entity::{token::Token, user_id::UserId, user_level::UserLevel},
     repository::user_exp_repository::UserExpRepository,
 };
 
@@ -36,8 +36,7 @@ where
     
     // ユーザー作成時に経験値のDBテーブルに対して、ユーザーのレコードを作成(1回だけ)
     // TODO: 引数に(tx: sqlx::Transaction)をとり、ユーザー作成と経験値テーブル初期化をトランザクションで行う
-    pub async fn init_exp(&self, token: Token) -> Result<(), ExpServiceError> {
-        let user_id = self.token_service.verify(token)?;
+    pub async fn init_exp(&self, user_id: UserId) -> Result<(), ExpServiceError> {
         self.exp_repo.init_exp(&user_id).await?;
         Ok(())
     }

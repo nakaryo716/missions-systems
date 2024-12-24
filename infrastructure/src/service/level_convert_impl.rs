@@ -12,8 +12,9 @@ struct ExpTable {
 // CSVにある経験値テーブルをBTreeMapとして取得し、実行時は保持している
 // 最適化していない状態で取り出し(get)は200ns程
 static EXP_TABLE: LazyLock<BTreeMap<u32, u32>> = LazyLock::new(|| {
+    let file_path = dotenvy::var("FILE_PATH").expect("Failed to get exp_table file path");
     let mut map = BTreeMap::new();
-    let mut rdr = csv::Reader::from_path("../exp_table.csv").expect("failed to open exp_table file");
+    let mut rdr = csv::Reader::from_path(file_path).expect("failed to open exp_table file");
     rdr.deserialize::<ExpTable>().for_each(|r| {
         let record = r.expect("failed to decode exp_table");
         map.insert(record.level, record.exp);
