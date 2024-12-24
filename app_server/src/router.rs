@@ -4,10 +4,17 @@ use axum::{
 };
 use sqlx::MySqlPool;
 
-use crate::handlers::{auth, daily_mission};
+use crate::handlers::{auth, daily_mission, exp, user};
 
 pub fn app(pool: MySqlPool) -> Router {
     Router::new()
+        .route(
+            "/user",
+            post(user::create_and_exp_init)
+                .get(user::user_info)
+                .put(user::update_name)
+                .delete(user::delete),
+        )
         .route("/login", post(auth::login))
         .route(
             "/daily",
@@ -20,5 +27,7 @@ pub fn app(pool: MySqlPool) -> Router {
                 .delete(daily_mission::delete),
         )
         .route("/daily/set/:id", get(daily_mission::set_complete))
+        .route("/exp", get(exp::find))
+        .route("/exp/:id", get(exp::add))
         .with_state(pool)
 }
