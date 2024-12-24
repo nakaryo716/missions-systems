@@ -1,5 +1,5 @@
 use axum::{
-    extract::{Path, State},
+    extract::State,
     http::StatusCode,
     response::IntoResponse,
     Json,
@@ -12,6 +12,8 @@ use infrastructure::{
 use sqlx::MySqlPool;
 
 use crate::{error::ServerError, types::token_warper::TokenWrap};
+
+static ADDITIONAL_POINT: i64 = 2;
 
 pub async fn find(
     TokenWrap(token): TokenWrap,
@@ -28,11 +30,10 @@ pub async fn find(
 pub async fn add(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
-    Path(additional_exp): Path<i32>,
 ) -> Result<impl IntoResponse, ServerError> {
     let service = user_exp_service(pool);
     service
-        .add_experience(token, additional_exp as i64)
+        .add_experience(token, ADDITIONAL_POINT)
         .await
         .map_err(|e| ServerError::UserExp(e))?;
     Ok(())
