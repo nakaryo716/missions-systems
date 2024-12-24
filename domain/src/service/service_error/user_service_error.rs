@@ -3,7 +3,7 @@ use thiserror::Error;
 use super::{hash_error::HashServiceError, token_service_error::TokenServiceError};
 use crate::repository::repository_error::RepositoryError;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 pub enum UserServiceError {
     #[error("Hash error: {0}")]
     HashError(String),
