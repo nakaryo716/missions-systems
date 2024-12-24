@@ -4,8 +4,7 @@ use crate::{
 };
 
 use super::{
-    level_convert::LevelConvert, service_error::exp_error::ExpServiceError,
-    token_service::TokenService,
+    level_convert::LevelConvert, service_error::exp_error::ExpServiceError, token_service::TokenService
 };
 
 /// 経験値関連のサービス実装
@@ -27,6 +26,14 @@ where
     L: LevelConvert,
     T: TokenService,
 {
+    pub fn new(exp_repo: E, level_converter: L, token_service: T) -> Self {
+        Self {
+            exp_repo,
+            level_converter,
+            token_service
+        }
+    }
+    
     // ユーザー作成時に経験値のDBテーブルに対して、ユーザーのレコードを作成(1回だけ)
     // TODO: 引数に(tx: sqlx::Transaction)をとり、ユーザー作成と経験値テーブル初期化をトランザクションで行う
     pub async fn init_exp(&self, token: Token) -> Result<(), ExpServiceError> {
