@@ -1,5 +1,5 @@
 use axum::{
-    routing::{get, post},
+    routing::{get, post, put},
     Router,
 };
 use sqlx::MySqlPool;
@@ -23,11 +23,12 @@ pub fn app(pool: MySqlPool) -> Router {
         .route(
             "/daily/:id",
             get(daily_mission::get_one)
-                .post(daily_mission::update)
+                .put(daily_mission::update)
                 .delete(daily_mission::delete),
         )
-        .route("/daily/set/:id", get(daily_mission::set_complete))
-        .route("/exp", get(exp::find))
-        .route("/exp/:id", get(exp::add))
+        .route("/daily/set/:id", put(daily_mission::set_complete))
+        .route("/exp", get(exp::find).put(exp::add))
         .with_state(pool)
 }
+
+// fix daily create plane text
