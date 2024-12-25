@@ -1,3 +1,5 @@
+use sqlx::{MySql, Transaction};
+
 use crate::{
     entity::{
         token::Token, user::User, user_builder::UserBuilder, user_id::UserId, user_info::UserInfo,
@@ -41,7 +43,8 @@ where
         }
     }
 
-    pub async fn create_user(&self, user_input: UserInput) -> Result<UserId, UserServiceError> {
+    // UserExpService::init_exp()とともにトランザクションで処理するため、Transaction型を引数に取っている
+    pub async fn create_user<'a>(&'a self, tx: &'a mut Transaction<'_, MySql>, user_input: UserInput) -> Result<UserId, UserServiceError> {
         // ユーザーが既に存在するか確認
         // trueの場合は既に存在するため早期リターン
         if self.user_repo.is_exist(&user_input.email).await? {
@@ -60,7 +63,7 @@ where
             .user_name(user_input.user_name)
             .email(user_input.email)
             .password_hash(password_hash);
-        let user_id = self.user_repo.create(&builder).await?;
+        let user_id = self.user_repo.create(tx, &builder).await?;
         Ok(user_id)
     }
 

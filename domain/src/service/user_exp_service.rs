@@ -1,3 +1,5 @@
+use sqlx::{MySql, Transaction};
+
 use crate::{
     entity::{token::Token, user_id::UserId, user_level::UserLevel},
     repository::user_exp_repository::UserExpRepository,
@@ -35,9 +37,9 @@ where
     }
     
     // ユーザー作成時に経験値のDBテーブルに対して、ユーザーのレコードを作成(1回だけ)
-    // TODO: 引数に(tx: sqlx::Transaction)をとり、ユーザー作成と経験値テーブル初期化をトランザクションで行う
-    pub async fn init_exp(&self, user_id: UserId) -> Result<(), ExpServiceError> {
-        self.exp_repo.init_exp(&user_id).await?;
+    // UserService::create()とともにトランザクションで処理するため Transaction型を引数に取っている
+    pub async fn init_exp<'a>(&'a self, tx: &'a mut Transaction<'_, MySql>, user_id: UserId) -> Result<(), ExpServiceError> {
+        self.exp_repo.init_exp(tx, &user_id).await?;
         Ok(())
     }
 

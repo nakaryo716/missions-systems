@@ -1,7 +1,7 @@
 use axum::{
     extract::{Query, State}, http::StatusCode, response::IntoResponse, Json
 };
-use domain::{entity::user_input::UserInput, service::user_service::UserService};
+use domain::{entity::user_input::UserInput, service::{service_error::user_service_error::UserServiceError, user_service::UserService}};
 use infrastructure::{
     repository::user_repository_impl::UserRepositoryImpl,
     service::{
@@ -23,16 +23,24 @@ pub async fn create_and_exp_init(
     Json(user_input): Json<UserInput>,
 ) -> Result<impl IntoResponse, ServerError> {
     let user_service = user_service(pool.clone());
-    let exp_service = user_exp_service(pool);
-
+    let exp_service = user_exp_service(pool.clone());
+    // トランザクション開始
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| ServerError::Transaction(e.to_string()))?;
+    // 1. ユーザー作成
     let user_id = user_service
-        .create_user(user_input)
+        .create_user(&mut tx, user_input)
         .await
         .map_err(|e| ServerError::UserErr(e))?;
+    // 2. ユーザー経験値テーブルの初期化
     exp_service
-        .init_exp(user_id)
+        .init_exp(&mut tx, user_id)
         .await
         .map_err(|e| ServerError::UserExp(e))?;
+    // コミット
+    tx.commit().await.map_err(|e| ServerError::Transaction(e.to_string()))?;
     Ok(())
 }
 

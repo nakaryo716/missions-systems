@@ -4,7 +4,7 @@ use domain::{
     entity::{user_exp::UserExp, user_id::UserId},
     repository::{repository_error::RepositoryError, user_exp_repository::UserExpRepository},
 };
-use sqlx::MySqlPool;
+use sqlx::{MySql, MySqlPool, Transaction};
 
 use crate::repository::to_repo_err;
 
@@ -20,11 +20,11 @@ impl UserExpRepositoryImpl {
 }
 
 impl UserExpRepository for UserExpRepositoryImpl {
-    fn init_exp(
-        &self,
-        user_id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
+    fn init_exp<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
+        user_id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         let user_id = user_id.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
@@ -34,7 +34,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
                 "#,
             )
             .bind(&user_id.0)
-            .execute(&pool)
+            .execute(&mut **tx)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -103,13 +103,13 @@ impl UserExpRepository for UserExpRepositoryImpl {
 #[cfg(test)]
 mod test {
     use domain::{
-        entity::{user_exp::UserExp, user_id::UserId},
-        repository::user_exp_repository::UserExpRepository,
+        entity::{user_builder::UserBuilder, user_exp::UserExp, user_id::UserId},
+        repository::{user_exp_repository::UserExpRepository, user_repository::UserRepository},
     };
     use sqlx::MySqlPool;
     use uuid::Uuid;
 
-    use crate::repository::user_exp_repository_impl::UserExpRepositoryImpl;
+    use crate::repository::{user_exp_repository_impl::UserExpRepositoryImpl, user_repository_impl::UserRepositoryImpl};
 
     type MyResult<T> = Result<T, Box<dyn std::error::Error>>;
     #[tokio::test]
@@ -119,10 +119,12 @@ mod test {
 
         // create user
         create_user(pool.clone(), &user_id_str).await?;
+        let mut tx = pool.begin().await?;
         // initialize
         UserExpRepositoryImpl::new(pool.clone())
-            .init_exp(&UserId(user_id_str.clone()))
+            .init_exp(&mut tx, &UserId(user_id_str.clone()))
             .await?;
+        tx.commit().await?;
         // select
         let exp = select_exp(pool.clone(), &user_id_str).await?;
         // assert
@@ -139,10 +141,11 @@ mod test {
         let pool = gen_pool().await?;
         let user_id_str = gen_random_str();
 
+        let mut tx = pool.begin().await?;
         let res = UserExpRepositoryImpl::new(pool.clone())
-            .init_exp(&UserId(user_id_str.clone()))
+            .init_exp(&mut tx, &UserId(user_id_str.clone()))
             .await;
-
+        tx.commit().await?;
         if let Ok(_) = res {
             panic!("init exp must be error due to no users, but initialized");
         }
@@ -158,7 +161,9 @@ mod test {
         // init repo service
         let repo = UserExpRepositoryImpl::new(pool.clone());
         // init
-        repo.init_exp(&UserId(user_id_str.clone())).await?;
+        let mut tx = pool.begin().await?;
+        repo.init_exp(&mut tx, &UserId(user_id_str.clone())).await?;
+        tx.commit().await?;
         let expected_exp = select_exp(pool.clone(), &user_id_str).await?;
         // find
         let returned_exp = repo.find_by_user_id(&UserId(user_id_str.clone())).await?;
@@ -180,7 +185,10 @@ mod test {
         // init repo service
         let repo = UserExpRepositoryImpl::new(pool.clone());
         // init
-        repo.init_exp(&UserId(user_id_str.clone())).await?;
+        let mut tx = pool.begin().await?;
+        repo.init_exp(&mut tx, &UserId(user_id_str.clone())).await?;
+        tx.commit().await?;
+
         // find
         let init_exp = repo.find_by_user_id(&UserId(user_id_str.clone())).await?;
         // add
@@ -194,6 +202,37 @@ mod test {
             added_exp.experience_points,
             init_exp.experience_points + additional_exp
         );
+        //delete
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_transaction_create_user_exp() -> MyResult<()> {
+        let pool = gen_pool().await?;
+        let user_id_str = gen_random_str();
+
+        let user = UserBuilder::new()
+            .user_id(UserId(user_id_str.clone()))
+            .user_name(format!("test_user_{}", user_id_str))
+            .email(format!("test_email_{}", user_id_str))
+            .password_hash(format!("test_user_{}", user_id_str));
+
+        let mut tx = pool.begin().await?;
+
+        let user_id = UserRepositoryImpl::new(pool.clone())
+            .create(&mut tx, &user).await?;
+        
+        let _ = UserExpRepositoryImpl::new(pool.clone())
+            .init_exp(&mut tx, &UserId(user_id_str.clone()))
+            .await;
+
+        tx.commit().await?;
+
+        let user_exp = UserExpRepositoryImpl::new(pool)
+            .find_by_user_id(&UserId(user_id_str.clone()))
+            .await?;
+        
+        assert_eq!(user_exp.user_id, user_id);
         //delete
         Ok(())
     }

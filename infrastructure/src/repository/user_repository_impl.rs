@@ -4,7 +4,7 @@ use domain::{
     entity::{user::User, user_builder::UserBuilder, user_id::UserId},
     repository::{repository_error::RepositoryError, user_repository::UserRepository},
 };
-use sqlx::{MySqlPool, Row};
+use sqlx::{MySql, MySqlPool, Row, Transaction};
 
 use super::to_repo_err;
 
@@ -20,11 +20,11 @@ impl UserRepositoryImpl {
 }
 
 impl UserRepository for UserRepositoryImpl {
-    fn create(
-        &self,
+    fn create<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
         user_builder: &UserBuilder,
-    ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
+    ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'a>> {
         let user_builder = user_builder.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
@@ -39,7 +39,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user_builder.user_name)
             .bind(&user_builder.email)
             .bind(&user_builder.password_hash)
-            .execute(&pool)
+            .execute(&mut **tx)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -207,9 +207,12 @@ mod test {
 
     #[tokio::test]
     async fn test_create() -> MyResult<()> {
-        let service = UserRepositoryImpl::new(gen_pool().await?);
+        let pool = gen_pool().await?;
+        let service = UserRepositoryImpl::new(pool.clone());
         let (expected_user_id, builder) = builder();
-        let returned_user_id = service.create(&builder).await?;
+        let mut tx = pool.begin().await.unwrap();
+        let returned_user_id = service.create(&mut tx, &builder).await?;
+        tx.commit().await.unwrap();
         assert_eq!(returned_user_id, expected_user_id);
         Ok(())
     }
@@ -309,8 +312,11 @@ mod test {
     }
 
     async fn create_user_batch(expected_user_id: UserId, builder: UserBuilder) -> MyResult<UserId> {
-        let service = UserRepositoryImpl::new(gen_pool().await?);
-        let returned_user_id = service.create(&builder).await?;
+        let pool = gen_pool().await?;
+        let service = UserRepositoryImpl::new(pool.clone());
+        let mut tx = pool.begin().await.unwrap();
+        let returned_user_id = service.create(&mut tx, &builder).await?;
+        tx.commit().await.unwrap();
         assert_eq!(returned_user_id, expected_user_id);
         Ok(returned_user_id)
     }
