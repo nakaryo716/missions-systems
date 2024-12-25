@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = ["app_server", "domain", "infrastructure"]
+members = ["app_server", "mission_resetter", "domain", "infrastructure"]
 
 [workspace.dependencies]
 dotenvy = "0.15.7"
