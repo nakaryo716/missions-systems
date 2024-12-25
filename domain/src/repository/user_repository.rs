@@ -1,5 +1,7 @@
 use std::{future::Future, pin::Pin};
 
+use sqlx::{MySql, Transaction};
+
 use crate::entity::{user::User, user_builder::UserBuilder, user_id::UserId};
 
 use super::repository_error::RepositoryError;
@@ -8,10 +10,11 @@ use super::repository_error::RepositoryError;
 /// UserRepositoryの実装はinfrastructureで行う
 pub trait UserRepository {
     /// Userデータを保存する
-    fn create(
-        &self,
-        user_builder: &UserBuilder,
-    ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'static>>;
+    fn create<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
+        user_builder: &'a UserBuilder,
+    ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'a>>;
 
     /// UserIdによってUserデータを取得する
     fn find_by_id(
