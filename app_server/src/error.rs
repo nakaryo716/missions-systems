@@ -10,6 +10,7 @@ pub enum ServerError {
     DailyError(DailyMissionServiceError),
     UserExp(ExpServiceError),
     UserErr(UserServiceError),
+    Transaction(String),
 }
 
 impl IntoResponse for ServerError {
@@ -56,6 +57,7 @@ impl IntoResponse for ServerError {
                 }
                 _ => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
             },
+            Self::Transaction(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
     }
 }
