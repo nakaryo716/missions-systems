@@ -26,7 +26,7 @@ pub async fn create(
         .create(token, mission_payload)
         .await
         .map_err(|e| ServerError::DailyError(e))?;
-    Ok((StatusCode::CREATED, ()))
+    Ok(StatusCode::CREATED)
 }
 
 pub async fn get_one(
@@ -68,19 +68,6 @@ pub async fn update(
     Ok(StatusCode::OK)
 }
 
-pub async fn set_complete(
-    TokenWrap(token): TokenWrap,
-    State(pool): State<MySqlPool>,
-    Path(mission_id): Path<String>,
-) -> Result<impl IntoResponse, ServerError> {
-    let service = daily_mission_service(pool);
-    service
-        .set_complete_true(token, DailyMissionId(mission_id))
-        .await
-        .map_err(|e| ServerError::DailyError(e))?;
-    Ok(StatusCode::OK)
-}
-
 pub async fn delete(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
@@ -94,7 +81,7 @@ pub async fn delete(
     Ok(StatusCode::NO_CONTENT)
 }
 
-fn daily_mission_service(
+pub(super)fn daily_mission_service(
     pool: MySqlPool,
 ) -> DailyMissionService<TokenServiceImpl, UUIDServiceImpl, DailyMissionRepositoryImpl> {
     DailyMissionService::new(

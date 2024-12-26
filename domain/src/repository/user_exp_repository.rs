@@ -24,9 +24,10 @@ pub trait UserExpRepository {
     ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'static>>;
 
     /// UserExpの経験値を増加(変更)させる
-    fn add_exp(
-        &self,
-        user_id: &UserId,
+    fn add_exp<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
+        user_id: &'a UserId,
         additional_exp: i64,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 }
