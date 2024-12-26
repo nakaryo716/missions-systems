@@ -12,7 +12,7 @@ use http::{
 use sqlx::MySqlPool;
 use tower_http::cors::CorsLayer;
 
-use crate::handlers::{auth, daily_mission, exp, user};
+use crate::handlers::{auth, combine, daily_mission, exp, user};
 
 pub fn app(pool: MySqlPool, allow_origin: &str) -> Router {
     Router::new()
@@ -34,8 +34,8 @@ pub fn app(pool: MySqlPool, allow_origin: &str) -> Router {
                 .put(daily_mission::update)
                 .delete(daily_mission::delete),
         )
-        .route("/daily/set/:id", put(daily_mission::set_complete))
-        .route("/exp", get(exp::find).put(exp::add))
+        .route("/exp", get(exp::find))
+        .route("/daily/complete/:id", put(combine::set_complete_with_add_exp))
         .with_state(pool)
         .layer(
             CorsLayer::new()
