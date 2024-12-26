@@ -13,8 +13,6 @@ use sqlx::MySqlPool;
 
 use crate::{error::ServerError, types::token_warper::TokenWrap};
 
-static ADDITIONAL_POINT: i64 = 2;
-
 pub async fn find(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
@@ -25,18 +23,6 @@ pub async fn find(
         .await
         .map_err(|e| ServerError::UserExp(e))?;
     Ok((StatusCode::OK, Json(exp_with_level)))
-}
-
-pub async fn add(
-    TokenWrap(token): TokenWrap,
-    State(pool): State<MySqlPool>,
-) -> Result<impl IntoResponse, ServerError> {
-    let service = user_exp_service(pool);
-    service
-        .add_experience(token, ADDITIONAL_POINT)
-        .await
-        .map_err(|e| ServerError::UserExp(e))?;
-    Ok(())
 }
 
 pub(super) fn user_exp_service(
