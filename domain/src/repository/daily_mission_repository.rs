@@ -1,5 +1,7 @@
 use std::{future::Future, pin::Pin};
 
+use sqlx::{MySql, Transaction};
+
 use crate::entity::{
     daily_mission::DailyMission, daily_mission_id::DailyMissionId, user_id::UserId,
 };
@@ -35,10 +37,11 @@ pub trait DailyMissionRepository {
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
 
     /// DailyMissionのis_completeフィールドをfalseからtrueにセットする
-    fn set_complete_true(
-        &self,
+    fn set_complete_true<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
         mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// 指定されたDailyMissionデータ一つを削除する
     fn delete(
