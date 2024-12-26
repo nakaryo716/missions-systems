@@ -1,3 +1,5 @@
+use sqlx::{MySql, Transaction};
+
 use crate::{
     entity::{
         daily_mission::DailyMission, daily_mission_builder::DailyMissionBuilder,
@@ -92,13 +94,14 @@ where
         Ok(())
     }
 
-    pub async fn set_complete_true(
+    pub async fn set_complete_true<'a>(
         &self,
+        mut tx: &'a mut Transaction<'_, MySql>,
         token: Token,
         mission_id: DailyMissionId,
     ) -> Result<(), DailyMissionServiceError> {
         self.token_service.verify(token)?;
-        self.mission_repo.set_complete_true(&mission_id).await?;
+        self.mission_repo.set_complete_true(&mut tx, &mission_id).await?;
         Ok(())
     }
 

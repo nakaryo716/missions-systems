@@ -69,12 +69,12 @@ impl UserExpRepository for UserExpRepositoryImpl {
         })
     }
 
-    fn add_exp(
-        &self,
-        user_id: &UserId,
+    fn add_exp<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
+        user_id: &'a UserId,
         additional_exp: i64,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         let user_id = user_id.to_owned();
         let additional_exp = additional_exp.to_owned();
         Box::pin(async move {
@@ -87,7 +87,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
             )
             .bind(&additional_exp)
             .bind(&user_id.0)
-            .execute(&pool)
+            .execute(&mut **tx)
             .await
             .map_err(|e| to_repo_err(e))?;
 
@@ -192,8 +192,10 @@ mod test {
         // find
         let init_exp = repo.find_by_user_id(&UserId(user_id_str.clone())).await?;
         // add
-        repo.add_exp(&UserId(user_id_str.clone()), additional_exp)
+        let mut tx = pool.begin().await?;
+        repo.add_exp(&mut tx, &UserId(user_id_str.clone()), additional_exp)
             .await?;
+        tx.commit().await?;
         //find
         let added_exp = repo.find_by_user_id(&UserId(user_id_str.clone())).await?;
         //assert

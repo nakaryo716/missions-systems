@@ -6,7 +6,7 @@ use domain::{
         daily_mission_repository::DailyMissionRepository, repository_error::RepositoryError,
     },
 };
-use sqlx::MySqlPool;
+use sqlx::{MySql, MySqlPool, Transaction};
 
 use super::to_repo_err;
 
@@ -132,11 +132,11 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         })
     }
 
-    fn set_complete_true(
+    fn set_complete_true<'a>(
         &self,
+        tx: &'a mut Transaction<'_, MySql>,
         mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         let mission_id = mission_id.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
@@ -147,7 +147,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 "#,
             )
             .bind(&mission_id.0)
-            .execute(&pool)
+            .execute(& mut **tx)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -325,8 +325,10 @@ mod test {
         let mission = gen_daily_mission(&user_id, Some("description"));
         create_daily_batch(pool.clone(), mission.clone()).await?;
 
-        let service = DailyMissionRepositoryImpl::new(pool);
-        service.set_complete_true(&mission.mission_id).await?;
+        let service = DailyMissionRepositoryImpl::new(pool.clone());
+        let mut tx = pool.begin().await?;
+        service.set_complete_true(&mut tx, &mission.mission_id).await?;
+        tx.commit().await?;
 
         let returned_mission = service.find_by_id(&mission.mission_id).await?;
 
