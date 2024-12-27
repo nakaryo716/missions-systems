@@ -17,32 +17,32 @@ pub trait UserRepository {
     ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'a>>;
 
     /// UserIdによってUserデータを取得する
-    fn find_by_id(
-        &self,
-        id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'static>>;
+    fn find_by_id<'a>(
+        &'a self,
+        id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'a>>;
 
     /// emailによってUserデータを取得する
-    fn find_by_email(
-        &self,
-        email: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'static>>;
+    fn find_by_email<'a>(
+        &'a self,
+        email: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'a>>;
 
     /// Userデータを変更する
-    fn update(
-        &self,
-        user: &User,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    fn update<'a>(
+        &'a self,
+        user: &'a User,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// Userデータを削除する
-    fn delete(
-        &self,
-        id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    fn delete<'a>(
+        &'a self,
+        id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// Userが存在するか確認する
-    fn is_exist(
-        &self,
-        email: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<bool, RepositoryError>> + Send + 'static>>;
+    fn is_exist<'a>(
+        &'a self,
+        email: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<bool, RepositoryError>> + Send + 'a>>;
 }
