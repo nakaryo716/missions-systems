@@ -22,13 +22,11 @@ impl DailyMissionRepositoryImpl {
 }
 
 impl DailyMissionRepository for DailyMissionRepositoryImpl {
-    fn create(
-        &self,
-        builder: &DailyMission,
-    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'static>>
+    fn create<'a>(
+        &'a self,
+        builder: &'a DailyMission,
+    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'a>>
     {
-        let pool = self.pool.to_owned();
-        let builder = builder.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -42,25 +40,23 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&builder.mission_id.0)
             .bind(&builder.title)
             .bind(&builder.description)
-            .execute(&pool)
+            .execute(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
 
             if affected_len == 1 {
-                Ok(builder.mission_id)
+                Ok(builder.mission_id.to_owned())
             } else {
                 Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
             }
         })
     }
 
-    fn find_by_id(
-        &self,
-        mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let mission_id = mission_id.to_owned();
+    fn find_by_id<'a>(
+        &'a self,
+        mission_id: &'a DailyMissionId,
+    ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let mission = sqlx::query_as(
                 r#"
@@ -70,20 +66,18 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 "#,
             )
             .bind(&mission_id.0)
-            .fetch_one(&pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
             Ok(mission)
         })
     }
 
-    fn find_by_user_id(
-        &self,
-        user_id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'static>>
+    fn find_by_user_id<'a>(
+        &'a self,
+        user_id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'a>>
     {
-        let pool = self.pool.to_owned();
-        let user_id = user_id.to_owned();
         Box::pin(async move {
             let missions = sqlx::query_as(
                 r#"
@@ -93,19 +87,17 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 "#,
             )
             .bind(&user_id.0)
-            .fetch_all(&pool)
+            .fetch_all(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
             Ok(missions)
         })
     }
 
-    fn update(
-        &self,
-        mission: &DailyMission,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let mission = mission.to_owned();
+    fn update<'a>(
+        &'a self,
+        mission: &'a DailyMission,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -119,7 +111,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&mission.title)
             .bind(&mission.description)
             .bind(&mission.mission_id.0)
-            .execute(&pool)
+            .execute(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -135,9 +127,8 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
     fn set_complete_true<'a>(
         &self,
         tx: &'a mut Transaction<'_, MySql>,
-        mission_id: &DailyMissionId,
+        mission_id: &'a DailyMissionId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
-        let mission_id = mission_id.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -160,12 +151,10 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         })
     }
 
-    fn delete(
-        &self,
-        mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let mission_id = mission_id.to_owned();
+    fn delete<'a>(
+        &'a self,
+        mission_id: &'a DailyMissionId,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -174,7 +163,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 "#,
             )
             .bind(&mission_id.0)
-            .execute(&pool)
+            .execute(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
