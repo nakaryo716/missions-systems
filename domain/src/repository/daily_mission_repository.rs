@@ -12,40 +12,40 @@ use super::repository_error::RepositoryError;
 /// DailyMissionRepositoryの実装はinfrastructureで行う
 pub trait DailyMissionRepository {
     /// DailyMissionデータを保存する
-    fn create(
-        &self,
-        builder: &DailyMission,
-    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'static>>;
+    fn create<'a>(
+        &'a self,
+        builder: &'a DailyMission,
+    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'a>>;
 
     /// DailyMissionIdを使用して一つのDailyMissionデータを取得する
-    fn find_by_id(
-        &self,
-        mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'static>>;
+    fn find_by_id<'a>(
+        &'a self,
+        mission_id: &'a DailyMissionId,
+    ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'a>>;
 
     /// ユーザーのDailyMissionデータ**すべて**を取得する
-    fn find_by_user_id(
-        &self,
-        user_id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'static>>;
+    fn find_by_user_id<'a>(
+        &'a self,
+        user_id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'a>>;
 
     /// DailyMissionデータを変更する
     /// DailyMissionIdは引数のDailyMissionから参照する
-    fn update(
-        &self,
-        mission: &DailyMission,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    fn update<'a>(
+        &'a self,
+        mission: &'a DailyMission,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// DailyMissionのis_completeフィールドをfalseからtrueにセットする
     fn set_complete_true<'a>(
         &'a self,
         tx: &'a mut Transaction<'_, MySql>,
-        mission_id: &DailyMissionId,
+        mission_id: &'a DailyMissionId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// 指定されたDailyMissionデータ一つを削除する
-    fn delete(
-        &self,
-        mission_id: &DailyMissionId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>>;
+    fn delete<'a>(
+        &'a self,
+        mission_id: &'a DailyMissionId,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 }
