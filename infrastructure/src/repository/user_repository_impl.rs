@@ -23,9 +23,8 @@ impl UserRepository for UserRepositoryImpl {
     fn create<'a>(
         &'a self,
         tx: &'a mut Transaction<'_, MySql>,
-        user_builder: &UserBuilder,
+        user_builder: &'a UserBuilder,
     ) -> Pin<Box<dyn Future<Output = Result<UserId, RepositoryError>> + Send + 'a>> {
-        let user_builder = user_builder.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -45,7 +44,7 @@ impl UserRepository for UserRepositoryImpl {
             .rows_affected();
 
             if affected_len == 1 {
-                Ok(user_builder.user_id)
+                Ok(user_builder.user_id.to_owned())
             } else {
                 Err(RepositoryError::DatabaseError(
                     "Failed to insert".to_string(),
@@ -54,12 +53,10 @@ impl UserRepository for UserRepositoryImpl {
         })
     }
 
-    fn find_by_id(
-        &self,
-        id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let id = id.to_owned();
+    fn find_by_id<'a>(
+        &'a self,
+        id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let user = sqlx::query_as::<_, User>(
                 r#"
@@ -68,19 +65,17 @@ impl UserRepository for UserRepositoryImpl {
                 "#,
             )
             .bind(&id.0)
-            .fetch_one(&pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
             Ok(user)
         })
     }
 
-    fn find_by_email(
-        &self,
-        email: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let email = email.to_owned();
+    fn find_by_email<'a>(
+        &'a self,
+        email: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<User, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let user = sqlx::query_as::<_, User>(
                 r#"
@@ -89,19 +84,17 @@ impl UserRepository for UserRepositoryImpl {
                 "#,
             )
             .bind(&email)
-            .fetch_one(&pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
             Ok(user)
         })
     }
 
-    fn update(
-        &self,
-        user: &User,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let user = user.to_owned();
+    fn update<'a>(
+        &'a self,
+        user: &'a User,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -117,7 +110,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user.email)
             .bind(&user.password_hash)
             .bind(&user.user_id.0)
-            .execute(&pool)
+            .execute(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -130,11 +123,10 @@ impl UserRepository for UserRepositoryImpl {
         })
     }
 
-    fn delete(
-        &self,
-        id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
+    fn delete<'a>(
+        &'a self,
+        id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
         let id = id.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
@@ -144,7 +136,7 @@ impl UserRepository for UserRepositoryImpl {
                 "#,
             )
             .bind(&id.0)
-            .execute(&pool)
+            .execute(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -157,12 +149,10 @@ impl UserRepository for UserRepositoryImpl {
         })
     }
 
-    fn is_exist(
-        &self,
-        email: &str,
-    ) -> Pin<Box<dyn Future<Output = Result<bool, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let email = email.to_owned();
+    fn is_exist<'a>(
+        &'a self,
+        email: &'a str,
+    ) -> Pin<Box<dyn Future<Output = Result<bool, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let row = sqlx::query(
                 r#"
@@ -174,7 +164,7 @@ impl UserRepository for UserRepositoryImpl {
                 "#,
             )
             .bind(&email)
-            .fetch_one(&pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
 
