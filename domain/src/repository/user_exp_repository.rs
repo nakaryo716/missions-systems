@@ -18,10 +18,10 @@ pub trait UserExpRepository {
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// UserExpを取得する
-    fn find_by_user_id(
-        &self,
-        user_id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'static>>;
+    fn find_by_user_id<'a>(
+        &'a self,
+        user_id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'a>>;
 
     /// UserExpの経験値を増加(変更)させる
     fn add_exp<'a>(
