@@ -25,7 +25,6 @@ impl UserExpRepository for UserExpRepositoryImpl {
         tx: &'a mut Transaction<'_, MySql>,
         user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
-        let user_id = user_id.to_owned();
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -47,12 +46,10 @@ impl UserExpRepository for UserExpRepositoryImpl {
         })
     }
 
-    fn find_by_user_id(
-        &self,
-        user_id: &UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'static>> {
-        let pool = self.pool.to_owned();
-        let user_id = user_id.to_owned();
+    fn find_by_user_id<'a>(
+        &'a self,
+        user_id: &'a UserId,
+    ) -> Pin<Box<dyn Future<Output = Result<UserExp, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let exp = sqlx::query_as(
                 r#"
@@ -62,7 +59,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
                 "#,
             )
             .bind(&user_id.0)
-            .fetch_one(&pool)
+            .fetch_one(&self.pool)
             .await
             .map_err(|e| to_repo_err(e))?;
             Ok(exp)
@@ -75,8 +72,6 @@ impl UserExpRepository for UserExpRepositoryImpl {
         user_id: &'a UserId,
         additional_exp: i64,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
-        let user_id = user_id.to_owned();
-        let additional_exp = additional_exp.to_owned();
         Box::pin(async move {
             let result = sqlx::query(
                 r#"
