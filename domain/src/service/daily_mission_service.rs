@@ -62,8 +62,8 @@ where
         token: Token,
         mission_id: DailyMissionId,
     ) -> Result<DailyMission, DailyMissionServiceError> {
-        self.token_service.verify(token)?;
-        let mission = self.mission_repo.find_by_id(&mission_id).await?;
+        let user_id = self.token_service.verify(token)?;
+        let mission = self.mission_repo.find_by_id(&mission_id, &user_id).await?;
         Ok(mission)
     }
 
@@ -90,7 +90,7 @@ where
             .description(&mission_payload.description)
             .build();
 
-        self.mission_repo.update(&mission).await?;
+        self.mission_repo.update(&mission, &user_id).await?;
         Ok(())
     }
 
@@ -100,8 +100,8 @@ where
         token: Token,
         mission_id: DailyMissionId,
     ) -> Result<(), DailyMissionServiceError> {
-        self.token_service.verify(token)?;
-        self.mission_repo.set_complete_true(&mut tx, &mission_id).await?;
+        let user_id = self.token_service.verify(token)?;
+        self.mission_repo.set_complete_true(&mut tx, &mission_id, &user_id).await?;
         Ok(())
     }
 
@@ -110,8 +110,8 @@ where
         token: Token,
         mission_id: DailyMissionId,
     ) -> Result<(), DailyMissionServiceError> {
-        self.token_service.verify(token)?;
-        self.mission_repo.delete(&mission_id).await?;
+        let user_id = self.token_service.verify(token)?;
+        self.mission_repo.delete(&mission_id, &user_id).await?;
         Ok(())
     }
 }
