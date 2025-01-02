@@ -21,6 +21,7 @@ pub trait DailyMissionRepository {
     fn find_by_id<'a>(
         &'a self,
         mission_id: &'a DailyMissionId,
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'a>>;
 
     /// ユーザーのDailyMissionデータ**すべて**を取得する
@@ -34,6 +35,7 @@ pub trait DailyMissionRepository {
     fn update<'a>(
         &'a self,
         mission: &'a DailyMission,
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// DailyMissionのis_completeフィールドをfalseからtrueにセットする
@@ -41,11 +43,13 @@ pub trait DailyMissionRepository {
         &'a self,
         tx: &'a mut Transaction<'_, MySql>,
         mission_id: &'a DailyMissionId,
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 
     /// 指定されたDailyMissionデータ一つを削除する
     fn delete<'a>(
         &'a self,
         mission_id: &'a DailyMissionId,
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>>;
 }
