@@ -45,6 +45,14 @@ where
         mission_payload: DailyMissionInput,
     ) -> Result<DailyMissionId, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
+        let length = self.mission_repo.count(&user_id).await?;
+
+        // ユーザーは最大7個まで登録することができる
+        // 7個になったら追加できないようにguardする
+        if length >= 7 {
+            return Err(DailyMissionServiceError::OverCapacity);
+        }
+        
         let mission_id = DailyMissionId(self.uuid_service.generate());
         let mission = DailyMissionBuilder::new()
             .user_id(&user_id)
