@@ -1,4 +1,5 @@
 use thiserror::Error;
+use validator::ValidationErrors;
 
 use crate::repository::repository_error::RepositoryError;
 
@@ -14,6 +15,8 @@ pub enum DailyMissionServiceError {
     InvalidInput(TokenServiceError),
     #[error("Stored Daily Mission is full")]
     OverCapacity,
+    #[error("Validation error: {0}")]
+    Validate(ValidationErrors),
     #[error("Unknown error: {0}")]
     UnknownError(String),
 }
