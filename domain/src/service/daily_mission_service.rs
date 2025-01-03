@@ -1,4 +1,5 @@
 use sqlx::{MySql, Transaction};
+use validator::Validate;
 
 use crate::{
     entity::{
@@ -45,6 +46,9 @@ where
         mission_payload: DailyMissionInput,
     ) -> Result<DailyMissionId, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
+        // バリデーション
+        mission_payload.validate().map_err(|e| DailyMissionServiceError::Validate(e))?;
+        // ユーザーが登録しているデイリーミッションをカウント
         let length = self.mission_repo.count(&user_id).await?;
 
         // ユーザーは最大7個まで登録することができる
