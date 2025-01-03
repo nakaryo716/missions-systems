@@ -38,6 +38,9 @@ impl IntoResponse for ServerError {
                 DailyMissionServiceError::RepositoryError(_) => {
                     (StatusCode::INTERNAL_SERVER_ERROR).into_response()
                 }
+                DailyMissionServiceError::OverCapacity => {
+                    (StatusCode::BAD_REQUEST).into_response()
+                }
                 DailyMissionServiceError::UnknownError(_) => {
                     (StatusCode::INTERNAL_SERVER_ERROR).into_response()
                 }
