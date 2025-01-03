@@ -41,6 +41,9 @@ impl IntoResponse for ServerError {
                 DailyMissionServiceError::OverCapacity => {
                     (StatusCode::BAD_REQUEST).into_response()
                 }
+                DailyMissionServiceError::Validate(_) => {
+                    (StatusCode::BAD_REQUEST).into_response()
+                }
                 DailyMissionServiceError::UnknownError(_) => {
                     (StatusCode::INTERNAL_SERVER_ERROR).into_response()
                 }
@@ -58,7 +61,18 @@ impl IntoResponse for ServerError {
                 UserServiceError::RepositoryError(_) => {
                     (StatusCode::INTERNAL_SERVER_ERROR).into_response()
                 }
-                _ => (StatusCode::INTERNAL_SERVER_ERROR).into_response(),
+                UserServiceError::HashError(_) => {
+                    (StatusCode::INTERNAL_SERVER_ERROR).into_response()
+                }
+                UserServiceError::TokenError(_) => {
+                    (StatusCode::UNAUTHORIZED).into_response()
+                }
+                UserServiceError::UserAlreadyExists => {
+                    (StatusCode::BAD_REQUEST).into_response()
+                }
+                UserServiceError::Validation(_) => {
+                    (StatusCode::BAD_REQUEST).into_response()
+                }
             },
             Self::Transaction(_) => (StatusCode::INTERNAL_SERVER_ERROR).into_response()
         }
