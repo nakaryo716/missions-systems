@@ -12,6 +12,8 @@ pub enum DailyMissionServiceError {
     RepositoryError(RepositoryError),
     #[error("Invalid input: {0}")]
     InvalidInput(TokenServiceError),
+    #[error("Stored Daily Mission is full")]
+    OverCapacity,
     #[error("Unknown error: {0}")]
     UnknownError(String),
 }

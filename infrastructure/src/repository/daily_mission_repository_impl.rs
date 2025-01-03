@@ -6,7 +6,7 @@ use domain::{
         daily_mission_repository::DailyMissionRepository, repository_error::RepositoryError,
     },
 };
-use sqlx::{MySql, MySqlPool, Transaction};
+use sqlx::{MySql, MySqlPool, Transaction, Row};
 
 use super::to_repo_err;
 
@@ -50,6 +50,28 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             } else {
                 Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
             }
+        })
+    }
+
+    fn count<'a>(
+        &'a self,
+        user_id: &'a UserId
+    ) -> Pin<Box<dyn Future<Output = Result<i32, RepositoryError>> + Send + 'a>> {
+        Box::pin(async move {
+            let row = sqlx::query(
+                r#"
+                    SELECT COUNT(*) AS len
+                    FROM daily_mission
+                    WHERE user_id = ?
+                "#
+            )
+            .bind(&user_id.0)
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| to_repo_err(e))?;
+
+            let len = row.try_get("len").map_err(|e| to_repo_err(e))?;
+            Ok(len)
         })
     }
 
@@ -219,6 +241,25 @@ mod test {
         assert_eq!(daily_id, daily_mission.mission_id);
 
         service.delete(&daily_id, &UserId(user_id.clone())).await?;
+        delete_test_user(&user_id).await?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_daily_count() -> MyResult<()> {
+        let user_id = format!("{}_{}", USER_ID, gen_random_string());
+        create_test_user(&user_id).await?;
+
+        let daily_mission = gen_daily_mission(&user_id, Some("hi"));
+        let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
+
+        for _ in 0..10 {
+            service.create(&daily_mission).await?;
+        }
+
+        let count = service.count(&UserId(user_id.clone())).await?;
+        assert_eq!(count, 10);
+
         delete_test_user(&user_id).await?;
         Ok(())
     }
