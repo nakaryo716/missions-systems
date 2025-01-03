@@ -1,4 +1,5 @@
 use thiserror::Error;
+use validator::ValidationErrors;
 
 use super::{hash_error::HashServiceError, token_service_error::TokenServiceError};
 use crate::repository::repository_error::RepositoryError;
@@ -9,10 +10,12 @@ pub enum UserServiceError {
     HashError(String),
     #[error("Repository error: {0}")]
     RepositoryError(String),
-    #[error("user already exists")]
+    #[error("User already exists")]
     UserAlreadyExists,
-    #[error("token error: {0}")]
+    #[error("Token error: {0}")]
     TokenError(TokenServiceError),
+    #[error("Validation error: {0}")]
+    Validation(ValidationErrors),
 }
 
 impl From<HashServiceError> for UserServiceError {

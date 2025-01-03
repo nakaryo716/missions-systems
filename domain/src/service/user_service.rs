@@ -1,4 +1,5 @@
 use sqlx::{MySql, Transaction};
+use validator::Validate;
 
 use crate::{
     entity::{
@@ -45,6 +46,8 @@ where
 
     // UserExpService::init_exp()とともにトランザクションで処理するため、Transaction型を引数に取っている
     pub async fn create_user<'a>(&'a self, tx: &'a mut Transaction<'_, MySql>, user_input: UserInput) -> Result<UserId, UserServiceError> {
+        // 入力のバリデーション
+        user_input.validate().map_err(|e| UserServiceError::Validation(e))?;
         // ユーザーが既に存在するか確認
         // trueの場合は既に存在するため早期リターン
         if self.user_repo.is_exist(&user_input.email).await? {
