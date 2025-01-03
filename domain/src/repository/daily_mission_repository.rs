@@ -17,6 +17,12 @@ pub trait DailyMissionRepository {
         builder: &'a DailyMission,
     ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'a>>;
 
+    /// ユーザーが登録したミッションがいくつあるのかカウントするメソッド
+    fn count<'a>(
+        &'a self,
+        user_id: &'a UserId
+    ) -> Pin<Box<dyn Future<Output = Result<i32, RepositoryError>> + Send + 'a>>;
+
     /// DailyMissionIdを使用して一つのDailyMissionデータを取得する
     fn find_by_id<'a>(
         &'a self,
