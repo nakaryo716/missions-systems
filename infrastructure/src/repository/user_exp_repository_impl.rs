@@ -35,13 +35,15 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .bind(&user_id.0)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
                 Ok(())
             } else {
-                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+                Err(RepositoryError::DatabaseError(
+                    "Failed to insert".to_string(),
+                ))
             }
         })
     }
@@ -61,7 +63,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .bind(&user_id.0)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(exp)
         })
     }
@@ -80,11 +82,11 @@ impl UserExpRepository for UserExpRepositoryImpl {
                     WHERE user_id = ?
                 "#,
             )
-            .bind(&additional_exp)
+            .bind(additional_exp)
             .bind(&user_id.0)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
 
             if result.rows_affected() == 1 {
                 Ok(())
@@ -104,7 +106,9 @@ mod test {
     use sqlx::MySqlPool;
     use uuid::Uuid;
 
-    use crate::repository::{user_exp_repository_impl::UserExpRepositoryImpl, user_repository_impl::UserRepositoryImpl};
+    use crate::repository::{
+        user_exp_repository_impl::UserExpRepositoryImpl, user_repository_impl::UserRepositoryImpl,
+    };
 
     type MyResult<T> = Result<T, Box<dyn std::error::Error>>;
     #[tokio::test]
@@ -217,8 +221,9 @@ mod test {
         let mut tx = pool.begin().await?;
 
         let user_id = UserRepositoryImpl::new(pool.clone())
-            .create(&mut tx, &user).await?;
-        
+            .create(&mut tx, &user)
+            .await?;
+
         let _ = UserExpRepositoryImpl::new(pool.clone())
             .init_exp(&mut tx, &UserId(user_id_str.clone()))
             .await;
@@ -228,7 +233,7 @@ mod test {
         let user_exp = UserExpRepositoryImpl::new(pool)
             .find_by_user_id(&UserId(user_id_str.clone()))
             .await?;
-        
+
         assert_eq!(user_exp.user_id, user_id);
         //delete
         Ok(())

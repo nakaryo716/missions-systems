@@ -1,7 +1,10 @@
 use axum::{
-    extract::{Query, State}, http::StatusCode, response::IntoResponse, Json
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
 };
-use domain::{entity::user_input::UserInput, service::{service_error::user_service_error::UserServiceError, user_service::UserService}};
+use domain::{entity::user_input::UserInput, service::user_service::UserService};
 use infrastructure::{
     repository::user_repository_impl::UserRepositoryImpl,
     service::{
@@ -33,14 +36,16 @@ pub async fn create_and_exp_init(
     let user_id = user_service
         .create_user(&mut tx, user_input)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     // 2. ユーザー経験値テーブルの初期化
     exp_service
         .init_exp(&mut tx, user_id)
         .await
-        .map_err(|e| ServerError::UserExp(e))?;
+        .map_err(ServerError::UserExp)?;
     // コミット
-    tx.commit().await.map_err(|e| ServerError::Transaction(e.to_string()))?;
+    tx.commit()
+        .await
+        .map_err(|e| ServerError::Transaction(e.to_string()))?;
     Ok(())
 }
 
@@ -52,7 +57,7 @@ pub async fn user_info(
     let user_info = service
         .get_user_info(token)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok((StatusCode::OK, Json(user_info)))
 }
 
@@ -65,7 +70,7 @@ pub async fn update_name(
     service
         .update_user_name(token, user_name)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok(())
 }
 
@@ -77,7 +82,7 @@ pub async fn delete(
     service
         .delete_user(token)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok(())
 }
 

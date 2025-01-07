@@ -47,7 +47,9 @@ where
     ) -> Result<DailyMissionId, DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
         // バリデーション
-        mission_payload.validate().map_err(|e| DailyMissionServiceError::Validate(e))?;
+        mission_payload
+            .validate()
+            .map_err(DailyMissionServiceError::Validate)?;
         // ユーザーが登録しているデイリーミッションをカウント
         let length = self.mission_repo.count(&user_id).await?;
 
@@ -56,7 +58,7 @@ where
         if length >= 7 {
             return Err(DailyMissionServiceError::OverCapacity);
         }
-        
+
         let mission_id = DailyMissionId(self.uuid_service.generate());
         let mission = DailyMissionBuilder::new()
             .user_id(&user_id)
@@ -108,12 +110,14 @@ where
 
     pub async fn set_complete_true<'a>(
         &self,
-        mut tx: &'a mut Transaction<'_, MySql>,
+        tx: &'a mut Transaction<'_, MySql>,
         token: Token,
         mission_id: DailyMissionId,
     ) -> Result<(), DailyMissionServiceError> {
         let user_id = self.token_service.verify(token)?;
-        self.mission_repo.set_complete_true(&mut tx, &mission_id, &user_id).await?;
+        self.mission_repo
+            .set_complete_true(tx, &mission_id, &user_id)
+            .await?;
         Ok(())
     }
 

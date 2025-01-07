@@ -35,7 +35,10 @@ pub fn app(pool: MySqlPool, allow_origin: &str) -> Router {
                 .delete(daily_mission::delete),
         )
         .route("/exp", get(exp::find))
-        .route("/daily/complete/:id", put(combine::set_complete_with_add_exp))
+        .route(
+            "/daily/complete/:id",
+            put(combine::set_complete_with_add_exp),
+        )
         .with_state(pool)
         .layer(
             CorsLayer::new()

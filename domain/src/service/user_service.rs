@@ -45,9 +45,15 @@ where
     }
 
     // UserExpService::init_exp()とともにトランザクションで処理するため、Transaction型を引数に取っている
-    pub async fn create_user<'a>(&'a self, tx: &'a mut Transaction<'_, MySql>, user_input: UserInput) -> Result<UserId, UserServiceError> {
+    pub async fn create_user<'a>(
+        &'a self,
+        tx: &'a mut Transaction<'_, MySql>,
+        user_input: UserInput,
+    ) -> Result<UserId, UserServiceError> {
         // 入力のバリデーション
-        user_input.validate().map_err(|e| UserServiceError::Validation(e))?;
+        user_input
+            .validate()
+            .map_err(UserServiceError::Validation)?;
         // ユーザーが既に存在するか確認
         // trueの場合は既に存在するため早期リターン
         if self.user_repo.is_exist(&user_input.email).await? {
@@ -85,7 +91,7 @@ where
     ) -> Result<(), UserServiceError> {
         // トークンを持っているか検証
         let user_id = self.token_service.verify(token)?;
-        let stored_user = self.user_repo.find_by_id(&user_id).await?;        
+        let stored_user = self.user_repo.find_by_id(&user_id).await?;
         let user = User {
             user_id: stored_user.user_id,
             user_name: update_user_name,
