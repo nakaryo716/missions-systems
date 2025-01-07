@@ -69,9 +69,7 @@ where
         let user_id = self.token_service.verify(token)?;
         // TODO: ユーザーが持つ経験値を取得しオーバーフローしないか検証する
         //       経験値が最大であったらエラーを返す
-        self.exp_repo
-            .add_exp(tx, &user_id, additional_exp)
-            .await?;
+        self.exp_repo.add_exp(tx, &user_id, additional_exp).await?;
         Ok(())
     }
 }
