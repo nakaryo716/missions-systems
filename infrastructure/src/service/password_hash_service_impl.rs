@@ -75,10 +75,9 @@ impl PasswordHashService for PasswordHashServiceImpl {
 
             // Hash値検証の処理時間を測定したところ400ms弱かかっており、.awaitに到達するまでに長い時間ブロックしてしまう
             // spawn_blockingを使用して専用スレッドで計算し、ワーカースレッドをブロックしないようにする
-            let verify_result = tokio::task::spawn_blocking(f)
+            tokio::task::spawn_blocking(f)
                 .await
-                .map_err(|_| HashServiceError::FailedToVerify)?;
-            verify_result
+                .map_err(|_| HashServiceError::FailedToVerify)?
         })
     }
 }
