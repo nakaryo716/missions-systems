@@ -34,7 +34,7 @@ fn read_key_from_file() -> String {
 fn generate_key() -> String {
     let mut key = [0u8; 32];
     OsRng.fill_bytes(&mut key);
-    BASE64_STANDARD.encode(&key)
+    BASE64_STANDARD.encode(key)
 }
 
 fn create_key_file(key: &str) -> Result<(), std::io::Error> {
@@ -51,7 +51,7 @@ impl TokenService for TokenServiceImpl {
         let header = Header::new(Algorithm::HS512);
         let key = &KEY;
         let token = encode(&header, &claims, &EncodingKey::from_secret(key.as_bytes()))
-            .map_err(|e| map_jwt_error(e))?;
+            .map_err(map_jwt_error)?;
         Ok(Token(token))
     }
 
@@ -62,7 +62,7 @@ impl TokenService for TokenServiceImpl {
             &DecodingKey::from_secret(key.as_bytes()),
             &Validation::new(Algorithm::HS512),
         )
-        .map_err(|e| map_jwt_error(e))?;
+        .map_err(map_jwt_error)?;
         Ok(token.claims.user_id)
     }
 }
