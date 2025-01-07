@@ -29,12 +29,12 @@ pub(crate) async fn set_complete_with_add_exp(
     daily_service
         .set_complete_true(&mut transaction, token.clone(), DailyMissionId(mission_id))
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     // ユーザーの経験値を上昇させる
     exp_service
         .add_experience(&mut transaction, token, ADDITIONAL_POINT)
         .await
-        .map_err(|e| ServerError::UserExp(e))?;
+        .map_err(ServerError::UserExp)?;
     // コミット
     transaction
         .commit()

@@ -35,7 +35,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .bind(&user_id.0)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -63,7 +63,7 @@ impl UserExpRepository for UserExpRepositoryImpl {
             .bind(&user_id.0)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(exp)
         })
     }
@@ -82,11 +82,11 @@ impl UserExpRepository for UserExpRepositoryImpl {
                     WHERE user_id = ?
                 "#,
             )
-            .bind(&additional_exp)
+            .bind(additional_exp)
             .bind(&user_id.0)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
 
             if result.rows_affected() == 1 {
                 Ok(())

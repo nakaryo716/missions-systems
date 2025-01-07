@@ -53,7 +53,7 @@ where
         // 入力のバリデーション
         user_input
             .validate()
-            .map_err(|e| UserServiceError::Validation(e))?;
+            .map_err(UserServiceError::Validation)?;
         // ユーザーが既に存在するか確認
         // trueの場合は既に存在するため早期リターン
         if self.user_repo.is_exist(&user_input.email).await? {

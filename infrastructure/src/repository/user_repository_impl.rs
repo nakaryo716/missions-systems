@@ -40,7 +40,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user_builder.password_hash)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -67,7 +67,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&id.0)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(user)
         })
     }
@@ -83,10 +83,10 @@ impl UserRepository for UserRepositoryImpl {
                     WHERE email = ?
                 "#,
             )
-            .bind(&email)
+            .bind(email)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(user)
         })
     }
@@ -112,7 +112,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&user.user_id.0)
             .execute(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -138,7 +138,7 @@ impl UserRepository for UserRepositoryImpl {
             .bind(&id.0)
             .execute(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -163,10 +163,10 @@ impl UserRepository for UserRepositoryImpl {
                     ) AS is_exist
                 "#,
             )
-            .bind(&email)
+            .bind(email)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
 
             let is_exist = row
                 .try_get("is_exist")

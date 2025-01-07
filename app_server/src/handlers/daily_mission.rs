@@ -25,7 +25,7 @@ pub async fn create(
     service
         .create(token, mission_payload)
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     Ok(StatusCode::CREATED)
 }
 
@@ -38,7 +38,7 @@ pub async fn get_one(
     let mission = service
         .find_by_id(token, DailyMissionId(mission_id))
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     Ok((StatusCode::OK, Json(mission)))
 }
 
@@ -50,7 +50,7 @@ pub async fn get_all(
     let missions = service
         .find_all(token)
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     Ok((StatusCode::OK, Json(missions)))
 }
 
@@ -64,7 +64,7 @@ pub async fn update(
     service
         .update(token, DailyMissionId(mission_id), mission_payload)
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     Ok(StatusCode::OK)
 }
 
@@ -77,7 +77,7 @@ pub async fn delete(
     service
         .delete(token, DailyMissionId(mission_id))
         .await
-        .map_err(|e| ServerError::DailyError(e))?;
+        .map_err(ServerError::DailyError)?;
     Ok(StatusCode::NO_CONTENT)
 }
 

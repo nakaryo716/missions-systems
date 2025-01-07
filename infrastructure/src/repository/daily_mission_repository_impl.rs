@@ -41,7 +41,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&builder.description)
             .execute(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -69,9 +69,9 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
 
-            let len = row.try_get("len").map_err(|e| to_repo_err(e))?;
+            let len = row.try_get("len").map_err(to_repo_err)?;
             Ok(len)
         })
     }
@@ -93,7 +93,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .fetch_one(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(mission)
         })
     }
@@ -113,7 +113,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .fetch_all(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?;
+            .map_err(to_repo_err)?;
             Ok(missions)
         })
     }
@@ -139,7 +139,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .execute(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -168,7 +168,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .execute(&mut **tx)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {
@@ -195,7 +195,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .bind(&user_id.0)
             .execute(&self.pool)
             .await
-            .map_err(|e| to_repo_err(e))?
+            .map_err(to_repo_err)?
             .rows_affected();
 
             if affected_len == 1 {

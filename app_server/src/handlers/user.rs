@@ -36,12 +36,12 @@ pub async fn create_and_exp_init(
     let user_id = user_service
         .create_user(&mut tx, user_input)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     // 2. ユーザー経験値テーブルの初期化
     exp_service
         .init_exp(&mut tx, user_id)
         .await
-        .map_err(|e| ServerError::UserExp(e))?;
+        .map_err(ServerError::UserExp)?;
     // コミット
     tx.commit()
         .await
@@ -57,7 +57,7 @@ pub async fn user_info(
     let user_info = service
         .get_user_info(token)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok((StatusCode::OK, Json(user_info)))
 }
 
@@ -70,7 +70,7 @@ pub async fn update_name(
     service
         .update_user_name(token, user_name)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok(())
 }
 
@@ -82,7 +82,7 @@ pub async fn delete(
     service
         .delete_user(token)
         .await
-        .map_err(|e| ServerError::UserErr(e))?;
+        .map_err(ServerError::UserErr)?;
     Ok(())
 }
 

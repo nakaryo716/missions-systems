@@ -62,7 +62,7 @@ where
     // ユーザーの経験値を追加する(delta値)
     pub async fn add_experience<'a>(
         &'a self,
-        mut tx: &'a mut Transaction<'_, MySql>,
+        tx: &'a mut Transaction<'_, MySql>,
         token: Token,
         additional_exp: i64,
     ) -> Result<(), ExpServiceError> {
@@ -70,7 +70,7 @@ where
         // TODO: ユーザーが持つ経験値を取得しオーバーフローしないか検証する
         //       経験値が最大であったらエラーを返す
         self.exp_repo
-            .add_exp(&mut tx, &user_id, additional_exp)
+            .add_exp(tx, &user_id, additional_exp)
             .await?;
         Ok(())
     }
