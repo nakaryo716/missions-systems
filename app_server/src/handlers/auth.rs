@@ -31,7 +31,7 @@ pub async fn login(
     let token = service
         .login(auth_payload)
         .await
-        .map_err(|e| ServerError::AuthError(e))?;
+        .map_err(ServerError::AuthError)?;
 
     let cookie = CookieBuilder::new("token", token.0)
         .http_only(true)
@@ -43,6 +43,5 @@ pub async fn login(
 
 fn token_exp() -> usize {
     let offset_lim_time = Local::now() + Duration::new(3600, 0);
-    let exp = offset_lim_time.timestamp() as usize;
-    exp
+    offset_lim_time.timestamp() as usize
 }
