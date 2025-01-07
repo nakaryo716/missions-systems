@@ -36,7 +36,7 @@ pub(crate) fn time_handler(
             // UPDATE実行時間までスレッドスリープ
             sleep(Duration::from_millis(remain as u64)).await;
             // DBと繋いでるタスクに、UPDATE文を発行するように指令する
-            if let Err(_) = tx.send(true).await {
+            if tx.send(true).await.is_err() {
                 warn!("Error: Sending message failed");
             }
         }
@@ -51,7 +51,7 @@ pub(crate) async fn sql_handler(
     database_url: String,
 ) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>> {
     Box::pin(async move {
-        while let Some(_) = rx.recv().await {
+        while rx.recv().await.is_some() {
             // コネクションプールの作成
             let pool = MySqlPool::connect(&database_url).await.unwrap();
             let arc_pool = Arc::new(pool.clone());
