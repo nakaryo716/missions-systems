@@ -41,7 +41,9 @@ impl UserExpRepository for UserExpRepositoryImpl {
             if affected_len == 1 {
                 Ok(())
             } else {
-                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+                Err(RepositoryError::DatabaseError(
+                    "Failed to insert".to_string(),
+                ))
             }
         })
     }
@@ -104,7 +106,9 @@ mod test {
     use sqlx::MySqlPool;
     use uuid::Uuid;
 
-    use crate::repository::{user_exp_repository_impl::UserExpRepositoryImpl, user_repository_impl::UserRepositoryImpl};
+    use crate::repository::{
+        user_exp_repository_impl::UserExpRepositoryImpl, user_repository_impl::UserRepositoryImpl,
+    };
 
     type MyResult<T> = Result<T, Box<dyn std::error::Error>>;
     #[tokio::test]
@@ -217,8 +221,9 @@ mod test {
         let mut tx = pool.begin().await?;
 
         let user_id = UserRepositoryImpl::new(pool.clone())
-            .create(&mut tx, &user).await?;
-        
+            .create(&mut tx, &user)
+            .await?;
+
         let _ = UserExpRepositoryImpl::new(pool.clone())
             .init_exp(&mut tx, &UserId(user_id_str.clone()))
             .await;
@@ -228,7 +233,7 @@ mod test {
         let user_exp = UserExpRepositoryImpl::new(pool)
             .find_by_user_id(&UserId(user_id_str.clone()))
             .await?;
-        
+
         assert_eq!(user_exp.user_id, user_id);
         //delete
         Ok(())

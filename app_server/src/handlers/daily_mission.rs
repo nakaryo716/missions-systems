@@ -81,7 +81,7 @@ pub async fn delete(
     Ok(StatusCode::NO_CONTENT)
 }
 
-pub(super)fn daily_mission_service(
+pub(super) fn daily_mission_service(
     pool: MySqlPool,
 ) -> DailyMissionService<TokenServiceImpl, UUIDServiceImpl, DailyMissionRepositoryImpl> {
     DailyMissionService::new(

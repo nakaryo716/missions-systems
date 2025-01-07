@@ -4,7 +4,7 @@ use sqlx::{Error, FromRow, MySql, MySqlPool, Transaction};
 use tokio::task::JoinHandle;
 
 #[derive(Debug, Clone, FromRow)]
-pub(crate)struct UserId {
+pub(crate) struct UserId {
     pub user_id: String,
 }
 

@@ -6,7 +6,7 @@ use domain::{
         daily_mission_repository::DailyMissionRepository, repository_error::RepositoryError,
     },
 };
-use sqlx::{MySql, MySqlPool, Transaction, Row};
+use sqlx::{MySql, MySqlPool, Row, Transaction};
 
 use super::to_repo_err;
 
@@ -25,8 +25,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
     fn create<'a>(
         &'a self,
         builder: &'a DailyMission,
-    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'a>>
-    {
+    ) -> Pin<Box<dyn Future<Output = Result<DailyMissionId, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
@@ -48,14 +47,16 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             if affected_len == 1 {
                 Ok(builder.mission_id.to_owned())
             } else {
-                Err(RepositoryError::DatabaseError("Failed to insert".to_string()))
+                Err(RepositoryError::DatabaseError(
+                    "Failed to insert".to_string(),
+                ))
             }
         })
     }
 
     fn count<'a>(
         &'a self,
-        user_id: &'a UserId
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<i32, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let row = sqlx::query(
@@ -63,7 +64,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                     SELECT COUNT(*) AS len
                     FROM daily_mission
                     WHERE user_id = ?
-                "#
+                "#,
             )
             .bind(&user_id.0)
             .fetch_one(&self.pool)
@@ -100,8 +101,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
     fn find_by_user_id<'a>(
         &'a self,
         user_id: &'a UserId,
-    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'a>>
-    {
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'a>> {
         Box::pin(async move {
             let missions = sqlx::query_as(
                 r#"
@@ -141,7 +141,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
-            
+
             if affected_len == 1 {
                 Ok(())
             } else {
@@ -166,7 +166,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             )
             .bind(&mission_id.0)
             .bind(&user_id.0)
-            .execute(& mut **tx)
+            .execute(&mut **tx)
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
@@ -197,7 +197,7 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
             .await
             .map_err(|e| to_repo_err(e))?
             .rows_affected();
-            
+
             if affected_len == 1 {
                 Ok(())
             } else {
@@ -275,10 +275,14 @@ mod test {
         create_daily_batch(pool.clone(), mission.clone()).await?;
         let service = DailyMissionRepositoryImpl::new(pool);
 
-        let returned_mission = service.find_by_id(&mission.mission_id, &UserId(user_id.clone())).await?;
+        let returned_mission = service
+            .find_by_id(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         assert_eq!(returned_mission, mission);
 
-        service.delete(&mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .delete(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         delete_test_user(&user_id).await?;
         Ok(())
     }
@@ -294,10 +298,14 @@ mod test {
         create_daily_batch(pool.clone(), mission.clone()).await?;
 
         let service = DailyMissionRepositoryImpl::new(pool);
-        let returned_mission = service.find_by_id(&mission.mission_id, &UserId(user_id.clone())).await?;
+        let returned_mission = service
+            .find_by_id(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         assert_eq!(returned_mission, mission);
 
-        service.delete(&mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .delete(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         delete_test_user(&user_id).await?;
         Ok(())
     }
@@ -345,10 +353,14 @@ mod test {
         let service = DailyMissionRepositoryImpl::new(pool);
         service.update(&mission, &UserId(user_id.clone())).await?;
 
-        let returned_mission = service.find_by_id(&mission.mission_id, &UserId(user_id.clone())).await?;
+        let returned_mission = service
+            .find_by_id(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         assert_ne!(returned_mission, mission);
 
-        service.delete(&mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .delete(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         delete_test_user(&user_id).await?;
         Ok(())
     }
@@ -365,10 +377,14 @@ mod test {
 
         let service = DailyMissionRepositoryImpl::new(pool.clone());
         let mut tx = pool.begin().await?;
-        service.set_complete_true(&mut tx, &mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .set_complete_true(&mut tx, &mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         tx.commit().await?;
 
-        let returned_mission = service.find_by_id(&mission.mission_id, &UserId(user_id.clone())).await?;
+        let returned_mission = service
+            .find_by_id(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
 
         assert_eq!(returned_mission.user_id, mission.user_id);
         assert_eq!(returned_mission.mission_id, mission.mission_id);
@@ -377,7 +393,9 @@ mod test {
 
         assert_ne!(returned_mission.is_complete, mission.is_complete);
 
-        service.delete(&mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .delete(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
         delete_test_user(&user_id).await?;
         Ok(())
     }
@@ -393,9 +411,14 @@ mod test {
         create_daily_batch(pool.clone(), mission.clone()).await?;
 
         let service = DailyMissionRepositoryImpl::new(pool);
-        service.delete(&mission.mission_id, &UserId(user_id.clone())).await?;
+        service
+            .delete(&mission.mission_id, &UserId(user_id.clone()))
+            .await?;
 
-        if let Ok(_) = service.find_by_id(&mission.mission_id, &UserId(user_id.clone())).await {
+        if let Ok(_) = service
+            .find_by_id(&mission.mission_id, &UserId(user_id.clone()))
+            .await
+        {
             delete_test_user(&user_id).await?;
             panic!("daily mission must be not exist, but exist");
         }

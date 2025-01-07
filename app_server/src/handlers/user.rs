@@ -1,7 +1,10 @@
 use axum::{
-    extract::{Query, State}, http::StatusCode, response::IntoResponse, Json
+    extract::{Query, State},
+    http::StatusCode,
+    response::IntoResponse,
+    Json,
 };
-use domain::{entity::user_input::UserInput, service::{service_error::user_service_error::UserServiceError, user_service::UserService}};
+use domain::{entity::user_input::UserInput, service::user_service::UserService};
 use infrastructure::{
     repository::user_repository_impl::UserRepositoryImpl,
     service::{
@@ -40,7 +43,9 @@ pub async fn create_and_exp_init(
         .await
         .map_err(|e| ServerError::UserExp(e))?;
     // コミット
-    tx.commit().await.map_err(|e| ServerError::Transaction(e.to_string()))?;
+    tx.commit()
+        .await
+        .map_err(|e| ServerError::Transaction(e.to_string()))?;
     Ok(())
 }
 

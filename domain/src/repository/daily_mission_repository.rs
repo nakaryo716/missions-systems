@@ -20,7 +20,7 @@ pub trait DailyMissionRepository {
     /// ユーザーが登録したミッションがいくつあるのかカウントするメソッド
     fn count<'a>(
         &'a self,
-        user_id: &'a UserId
+        user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<i32, RepositoryError>> + Send + 'a>>;
 
     /// DailyMissionIdを使用して一つのDailyMissionデータを取得する

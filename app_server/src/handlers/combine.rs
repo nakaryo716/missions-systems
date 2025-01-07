@@ -1,4 +1,7 @@
-use axum::{extract::{Path, State}, response::IntoResponse};
+use axum::{
+    extract::{Path, State},
+    response::IntoResponse,
+};
 use domain::entity::daily_mission_id::DailyMissionId;
 use http::StatusCode;
 use sqlx::MySqlPool;
@@ -12,7 +15,7 @@ static ADDITIONAL_POINT: i64 = 2;
 pub(crate) async fn set_complete_with_add_exp(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
-    Path(mission_id): Path<String>
+    Path(mission_id): Path<String>,
 ) -> Result<impl IntoResponse, ServerError> {
     let daily_service = daily_mission_service(pool.clone());
     let exp_service = user_exp_service(pool.clone());
@@ -33,6 +36,9 @@ pub(crate) async fn set_complete_with_add_exp(
         .await
         .map_err(|e| ServerError::UserExp(e))?;
     // コミット
-    transaction.commit().await.map_err(|e| ServerError::Transaction(e.to_string()))?;
+    transaction
+        .commit()
+        .await
+        .map_err(|e| ServerError::Transaction(e.to_string()))?;
     Ok(StatusCode::OK)
 }
