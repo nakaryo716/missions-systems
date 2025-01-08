@@ -13,13 +13,13 @@ use infrastructure::{
 };
 use sqlx::MySqlPool;
 
-use crate::error::ServerError;
+use crate::error::AuthError;
 
 pub async fn login(
     jar: CookieJar,
     State(pool): State<MySqlPool>,
     Json(auth_payload): Json<AuthRequest>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, AuthError> {
     // ログインサービスのインスタンス化
     let service = AuthService::new(
         PasswordHashServiceImpl,
@@ -28,10 +28,7 @@ pub async fn login(
         token_exp(),
     );
 
-    let token = service
-        .login(auth_payload)
-        .await
-        .map_err(ServerError::AuthError)?;
+    let token = service.login(auth_payload).await?;
 
     let cookie = CookieBuilder::new("token", token.0)
         .http_only(true)
