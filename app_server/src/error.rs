@@ -111,40 +111,169 @@ impl IntoResponse for AuthError {
     fn into_response(self) -> axum::response::Response {
         match self {
             Self::DataMismatch => (
-                StatusCode::BAD_REQUEST,
-                Json(Error::new(100, "Data mismatch")),
+                ErrorRes::DATA_MISMATCH.0,
+                Json(Error::new(
+                    ErrorRes::DATA_MISMATCH.1,
+                    ErrorRes::DATA_MISMATCH.2,
+                )),
             )
                 .into_response(),
             Self::InvalidData => (
-                StatusCode::BAD_REQUEST,
-                Json(Error::new(101, "Invalid data")),
+                ErrorRes::INVALID_DATA.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_DATA.1,
+                    ErrorRes::INVALID_DATA.2,
+                )),
             )
                 .into_response(),
             Self::InvalidToken => (
-                StatusCode::BAD_REQUEST,
-                Json(Error::new(102, "Invalid token")),
+                ErrorRes::INVALID_TOKEN.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_TOKEN.1,
+                    ErrorRes::INVALID_TOKEN.2,
+                )),
             )
                 .into_response(),
             Self::WrongPassword => (
-                StatusCode::BAD_REQUEST,
-                Json(Error::new(103, "Wrong password")),
+                ErrorRes::WRONG_PASSWORD.0,
+                Json(Error::new(
+                    ErrorRes::WRONG_PASSWORD.1,
+                    ErrorRes::WRONG_PASSWORD.2,
+                )),
             )
                 .into_response(),
             Self::Server => (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(Error::new(104, "Server error")),
+                ErrorRes::SERVER.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
             )
                 .into_response(),
             Self::TokenExpired => (
-                StatusCode::BAD_REQUEST,
-                Json(Error::new(105, "Token expired")),
+                ErrorRes::TOKEN_EXPIRED.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
             )
                 .into_response(),
             Self::UserNotFound => (
-                StatusCode::NOT_FOUND,
-                Json(Error::new(106, "User not found")),
+                ErrorRes::USER_NOT_FOUND.0,
+                Json(Error::new(
+                    ErrorRes::USER_NOT_FOUND.1,
+                    ErrorRes::USER_NOT_FOUND.2,
+                )),
             )
                 .into_response(),
         }
     }
+}
+
+pub(crate) enum ExpError {
+    DataMismatch,
+    InvalidData,
+    InvalidToken,
+    Server,
+    TokenExpired,
+    UserNotFound,
+    ExpOverflow,
+}
+
+impl From<ExpServiceError> for ExpError {
+    fn from(value: ExpServiceError) -> Self {
+        match value {
+            ExpServiceError::AuthError(e) => match e {
+                TokenServiceError::TokenInvalid(_) => ExpError::InvalidToken,
+                TokenServiceError::TokenExpired => ExpError::TokenExpired,
+                TokenServiceError::DataMismatch(_) => ExpError::DataMismatch,
+                _ => ExpError::Server,
+            },
+            ExpServiceError::RepositoryError(e) => match e {
+                RepositoryError::NotFound => ExpError::UserNotFound,
+                RepositoryError::InvalidData(_) => ExpError::InvalidData,
+                RepositoryError::DatabaseError(_) => ExpError::Server,
+            },
+            ExpServiceError::DetectedExpOverflow(_) => ExpError::ExpOverflow,
+        }
+    }
+}
+
+impl IntoResponse for ExpError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Self::DataMismatch => (
+                ErrorRes::DATA_MISMATCH.0,
+                Json(Error::new(
+                    ErrorRes::DATA_MISMATCH.1,
+                    ErrorRes::DATA_MISMATCH.2,
+                )),
+            )
+                .into_response(),
+            Self::InvalidData => (
+                ErrorRes::INVALID_DATA.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_DATA.1,
+                    ErrorRes::INVALID_DATA.2,
+                )),
+            )
+                .into_response(),
+            Self::InvalidToken => (
+                ErrorRes::INVALID_TOKEN.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_TOKEN.1,
+                    ErrorRes::INVALID_TOKEN.2,
+                )),
+            )
+                .into_response(),
+            Self::Server => (
+                ErrorRes::SERVER.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
+            )
+                .into_response(),
+            Self::TokenExpired => (
+                ErrorRes::TOKEN_EXPIRED.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
+            )
+                .into_response(),
+            Self::UserNotFound => (
+                ErrorRes::USER_NOT_FOUND.0,
+                Json(Error::new(
+                    ErrorRes::USER_NOT_FOUND.1,
+                    ErrorRes::USER_NOT_FOUND.2,
+                )),
+            )
+                .into_response(),
+            Self::ExpOverflow => (
+                ErrorRes::EXP_OVERFLOW.0,
+                Json(Error::new(
+                    ErrorRes::EXP_OVERFLOW.1,
+                    ErrorRes::EXP_OVERFLOW.2,
+                )),
+            )
+                .into_response(),
+        }
+    }
+}
+
+struct ErrorRes;
+
+impl ErrorRes {
+    const DATA_MISMATCH: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 100, "Data mismatch") };
+
+    const INVALID_DATA: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 101, "Invalid data") };
+
+    const INVALID_TOKEN: (StatusCode, u32, &str) =
+        { (StatusCode::UNAUTHORIZED, 102, "Invalid token") };
+
+    const SERVER: (StatusCode, u32, &str) =
+        { (StatusCode::INTERNAL_SERVER_ERROR, 103, "Server Error") };
+
+    const TOKEN_EXPIRED: (StatusCode, u32, &str) =
+        { (StatusCode::UNAUTHORIZED, 104, "Token expired") };
+
+    const USER_NOT_FOUND: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 105, "User not found") };
+
+    const WRONG_PASSWORD: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 106, "Invalid token") };
+
+    const EXP_OVERFLOW: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 200, "Exp is fulled") };
 }
