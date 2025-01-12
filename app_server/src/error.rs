@@ -24,9 +24,6 @@ impl IntoResponse for ServerError {
                 DailyMissionServiceError::AuthError(_) => {
                     (StatusCode::UNAUTHORIZED).into_response()
                 }
-                DailyMissionServiceError::InvalidInput(_) => {
-                    (StatusCode::BAD_REQUEST).into_response()
-                }
                 DailyMissionServiceError::RepositoryError(_) => {
                     (StatusCode::INTERNAL_SERVER_ERROR).into_response()
                 }
@@ -250,6 +247,103 @@ impl IntoResponse for ExpError {
     }
 }
 
+pub(crate) enum DailyError {
+    DataMismatch,
+    InvalidData,
+    InvalidToken,
+    OverCap,
+    Server,
+    TokenExpired,
+    UserNotFound,
+    Validate(String),
+}
+
+impl From<DailyMissionServiceError> for DailyError {
+    fn from(value: DailyMissionServiceError) -> Self {
+        match value {
+            DailyMissionServiceError::AuthError(e) => match e {
+                TokenServiceError::TokenInvalid(_) => DailyError::InvalidToken,
+                TokenServiceError::TokenExpired => DailyError::TokenExpired,
+                TokenServiceError::DataMismatch(_) => DailyError::DataMismatch,
+                _ => DailyError::Server,
+            },
+            DailyMissionServiceError::RepositoryError(v) => match v {
+                RepositoryError::NotFound => DailyError::UserNotFound,
+                RepositoryError::InvalidData(_) => DailyError::InvalidData,
+                RepositoryError::DatabaseError(_) => DailyError::Server,
+            },
+            DailyMissionServiceError::OverCapacity => DailyError::OverCap,
+            DailyMissionServiceError::Validate(e) => DailyError::Validate(e.to_string()),
+            DailyMissionServiceError::UnknownError(_) => DailyError::Server,
+        }
+    }
+}
+
+impl IntoResponse for DailyError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Self::DataMismatch => (
+                ErrorRes::DATA_MISMATCH.0,
+                Json(Error::new(
+                    ErrorRes::DATA_MISMATCH.1,
+                    ErrorRes::DATA_MISMATCH.2,
+                )),
+            )
+                .into_response(),
+            Self::InvalidData => (
+                ErrorRes::INVALID_DATA.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_DATA.1,
+                    ErrorRes::INVALID_DATA.2,
+                )),
+            )
+                .into_response(),
+            Self::InvalidToken => (
+                ErrorRes::INVALID_TOKEN.0,
+                Json(Error::new(
+                    ErrorRes::INVALID_TOKEN.1,
+                    ErrorRes::INVALID_TOKEN.2,
+                )),
+            )
+                .into_response(),
+            Self::Server => (
+                ErrorRes::SERVER.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
+            )
+                .into_response(),
+            Self::TokenExpired => (
+                ErrorRes::TOKEN_EXPIRED.0,
+                Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
+            )
+                .into_response(),
+            Self::UserNotFound => (
+                ErrorRes::USER_NOT_FOUND.0,
+                Json(Error::new(
+                    ErrorRes::USER_NOT_FOUND.1,
+                    ErrorRes::USER_NOT_FOUND.2,
+                )),
+            )
+                .into_response(),
+            Self::OverCap => (
+                ErrorRes::DAILY_OVER_CAP.0,
+                Json(Error::new(
+                    ErrorRes::DAILY_OVER_CAP.1,
+                    ErrorRes::DAILY_OVER_CAP.2,
+                )),
+            )
+                .into_response(),
+            Self::Validate(e) => (
+                ErrorRes::VALIDATION.0,
+                Json(Error::new(
+                    ErrorRes::VALIDATION.1,
+                    &format!("{}:{}", ErrorRes::VALIDATION.2, e),
+                )),
+            )
+                .into_response(),
+        }
+    }
+}
+
 struct ErrorRes;
 
 impl ErrorRes {
@@ -274,6 +368,17 @@ impl ErrorRes {
     const WRONG_PASSWORD: (StatusCode, u32, &str) =
         { (StatusCode::BAD_REQUEST, 106, "Invalid token") };
 
+    const VALIDATION: (StatusCode, u32, &str) =
+        { (StatusCode::BAD_REQUEST, 107, "Validation error") };
+
     const EXP_OVERFLOW: (StatusCode, u32, &str) =
         { (StatusCode::BAD_REQUEST, 200, "Exp is fulled") };
+
+    const DAILY_OVER_CAP: (StatusCode, u32, &str) = {
+        (
+            StatusCode::BAD_REQUEST,
+            300,
+            "The number of DailyMissions is fulled",
+        )
+    };
 }
