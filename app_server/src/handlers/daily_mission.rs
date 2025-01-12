@@ -14,18 +14,15 @@ use infrastructure::{
 };
 use sqlx::MySqlPool;
 
-use crate::{error::ServerError, types::token_warper::TokenWrap};
+use crate::{error::DailyError, types::token_warper::TokenWrap};
 
 pub async fn create(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
     Json(mission_payload): Json<DailyMissionInput>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, DailyError> {
     let service = daily_mission_service(pool);
-    service
-        .create(token, mission_payload)
-        .await
-        .map_err(ServerError::DailyError)?;
+    service.create(token, mission_payload).await?;
     Ok(StatusCode::CREATED)
 }
 
@@ -33,24 +30,20 @@ pub async fn get_one(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
     Path(mission_id): Path<String>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, DailyError> {
     let service = daily_mission_service(pool);
     let mission = service
         .find_by_id(token, DailyMissionId(mission_id))
-        .await
-        .map_err(ServerError::DailyError)?;
+        .await?;
     Ok((StatusCode::OK, Json(mission)))
 }
 
 pub async fn get_all(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, DailyError> {
     let service = daily_mission_service(pool);
-    let missions = service
-        .find_all(token)
-        .await
-        .map_err(ServerError::DailyError)?;
+    let missions = service.find_all(token).await?;
     Ok((StatusCode::OK, Json(missions)))
 }
 
@@ -59,12 +52,11 @@ pub async fn update(
     State(pool): State<MySqlPool>,
     Path(mission_id): Path<String>,
     Json(mission_payload): Json<DailyMissionInput>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, DailyError> {
     let service = daily_mission_service(pool);
     service
         .update(token, DailyMissionId(mission_id), mission_payload)
-        .await
-        .map_err(ServerError::DailyError)?;
+        .await?;
     Ok(StatusCode::OK)
 }
 
@@ -72,12 +64,9 @@ pub async fn delete(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
     Path(mission_id): Path<String>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, DailyError> {
     let service = daily_mission_service(pool);
-    service
-        .delete(token, DailyMissionId(mission_id))
-        .await
-        .map_err(ServerError::DailyError)?;
+    service.delete(token, DailyMissionId(mission_id)).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 
