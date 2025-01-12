@@ -11,8 +11,6 @@ pub enum DailyMissionServiceError {
     AuthError(TokenServiceError),
     #[error("Repository error: {0}")]
     RepositoryError(RepositoryError),
-    #[error("Invalid input: {0}")]
-    InvalidInput(TokenServiceError),
     #[error("Stored Daily Mission is full")]
     OverCapacity,
     #[error("Validation error: {0}")]
