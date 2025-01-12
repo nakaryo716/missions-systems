@@ -6,17 +6,14 @@ use infrastructure::{
 };
 use sqlx::MySqlPool;
 
-use crate::{error::ServerError, types::token_warper::TokenWrap};
+use crate::{error::ExpError, types::token_warper::TokenWrap};
 
 pub async fn find(
     TokenWrap(token): TokenWrap,
     State(pool): State<MySqlPool>,
-) -> Result<impl IntoResponse, ServerError> {
+) -> Result<impl IntoResponse, ExpError> {
     let service = user_exp_service(pool);
-    let exp_with_level = service
-        .find_with_level(token)
-        .await
-        .map_err(|e| ServerError::UserExp(e))?;
+    let exp_with_level = service.find_with_level(token).await?;
     Ok((StatusCode::OK, Json(exp_with_level)))
 }
 
