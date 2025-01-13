@@ -12,10 +12,14 @@ pub enum UserServiceError {
     RepositoryError(String),
     #[error("User already exists")]
     UserAlreadyExists,
+    #[error("User not found")]
+    UserNotFound,
     #[error("Token error: {0}")]
     TokenError(TokenServiceError),
     #[error("Validation error: {0}")]
     Validation(ValidationErrors),
+    #[error("Invalid data")]
+    InvalidData,
 }
 
 impl From<HashServiceError> for UserServiceError {
@@ -26,7 +30,11 @@ impl From<HashServiceError> for UserServiceError {
 
 impl From<RepositoryError> for UserServiceError {
     fn from(value: RepositoryError) -> Self {
-        UserServiceError::RepositoryError(value.to_string())
+        match value {
+            RepositoryError::DatabaseError(e) => UserServiceError::RepositoryError(e.to_string()),
+            RepositoryError::NotFound => UserServiceError::UserNotFound,
+            RepositoryError::InvalidData(_) => UserServiceError::InvalidData,
+        }
     }
 }
 
