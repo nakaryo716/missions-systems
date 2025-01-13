@@ -118,7 +118,7 @@ pub(crate) enum ExpError {
     InvalidToken,
     Server,
     TokenExpired,
-    UserNotFound,
+    NotFound,
     ExpOverflow,
 }
 
@@ -132,7 +132,7 @@ impl From<ExpServiceError> for ExpError {
                 _ => ExpError::Server,
             },
             ExpServiceError::RepositoryError(e) => match e {
-                RepositoryError::NotFound => ExpError::UserNotFound,
+                RepositoryError::NotFound => ExpError::NotFound,
                 RepositoryError::InvalidData(_) => ExpError::InvalidData,
                 RepositoryError::DatabaseError(_) => ExpError::Server,
             },
@@ -178,11 +178,11 @@ impl IntoResponse for ExpError {
                 Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
             )
                 .into_response(),
-            Self::UserNotFound => (
-                ErrorRes::USER_NOT_FOUND.0,
+            Self::NotFound => (
+                ErrorRes::ENTITY_NOT_FOUND.0,
                 Json(Error::new(
-                    ErrorRes::USER_NOT_FOUND.1,
-                    ErrorRes::USER_NOT_FOUND.2,
+                    ErrorRes::ENTITY_NOT_FOUND.1,
+                    ErrorRes::ENTITY_NOT_FOUND.2,
                 )),
             )
                 .into_response(),
@@ -205,7 +205,7 @@ pub(crate) enum DailyError {
     OverCap,
     Server,
     TokenExpired,
-    UserNotFound,
+    EntityNotFound,
     Validate(String),
 }
 
@@ -219,7 +219,7 @@ impl From<DailyMissionServiceError> for DailyError {
                 _ => DailyError::Server,
             },
             DailyMissionServiceError::RepositoryError(v) => match v {
-                RepositoryError::NotFound => DailyError::UserNotFound,
+                RepositoryError::NotFound => DailyError::EntityNotFound,
                 RepositoryError::InvalidData(_) => DailyError::InvalidData,
                 RepositoryError::DatabaseError(_) => DailyError::Server,
             },
@@ -267,11 +267,11 @@ impl IntoResponse for DailyError {
                 Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
             )
                 .into_response(),
-            Self::UserNotFound => (
-                ErrorRes::USER_NOT_FOUND.0,
+            Self::EntityNotFound => (
+                ErrorRes::ENTITY_NOT_FOUND.0,
                 Json(Error::new(
-                    ErrorRes::USER_NOT_FOUND.1,
-                    ErrorRes::USER_NOT_FOUND.2,
+                    ErrorRes::ENTITY_NOT_FOUND.1,
+                    ErrorRes::ENTITY_NOT_FOUND.2,
                 )),
             )
                 .into_response(),
@@ -389,6 +389,7 @@ pub(crate) enum CombineError {
     InvalidData,
     ExpOverflow,
     OverCap,
+    EntityNotFound,
     Validate(String),
 }
 
@@ -421,7 +422,7 @@ impl From<DailyMissionServiceError> for CombineError {
                 _ => CombineError::Server,
             },
             DailyMissionServiceError::RepositoryError(v) => match v {
-                RepositoryError::NotFound => CombineError::UserNotFound,
+                RepositoryError::NotFound => CombineError::EntityNotFound,
                 RepositoryError::InvalidData(_) => CombineError::InvalidData,
                 RepositoryError::DatabaseError(_) => CombineError::Server,
             },
@@ -501,6 +502,14 @@ impl IntoResponse for CombineError {
                 )),
             )
                 .into_response(),
+            Self::EntityNotFound => (
+                ErrorRes::ENTITY_NOT_FOUND.0,
+                Json(Error::new(
+                    ErrorRes::ENTITY_NOT_FOUND.1,
+                    ErrorRes::ENTITY_NOT_FOUND.2,
+                )),
+            )
+                .into_response(),
             Self::Transaction => (
                 ErrorRes::SERVER.0,
                 Json(Error::new(ErrorRes::SERVER.1, ErrorRes::SERVER.2)),
@@ -528,14 +537,17 @@ impl ErrorRes {
         { (StatusCode::UNAUTHORIZED, 104, "Token expired") };
 
     const USER_NOT_FOUND: (StatusCode, u32, &str) =
-        { (StatusCode::BAD_REQUEST, 105, "User not found") };
-
+        { (StatusCode::NOT_FOUND, 105, "User not found") };
+        
     const WRONG_PASSWORD: (StatusCode, u32, &str) =
-        { (StatusCode::BAD_REQUEST, 106, "Invalid token") };
-
+    { (StatusCode::BAD_REQUEST, 106, "Wrong password") };
+        
     const VALIDATION: (StatusCode, u32, &str) =
-        { (StatusCode::BAD_REQUEST, 107, "Validation error") };
-
+    { (StatusCode::BAD_REQUEST, 107, "Validation error") };
+        
+    const ENTITY_NOT_FOUND: (StatusCode, u32, &str) = 
+        { (StatusCode::NOT_FOUND, 108, "Entity not found") };
+        
     const EXP_OVERFLOW: (StatusCode, u32, &str) =
         { (StatusCode::BAD_REQUEST, 200, "Exp is fulled") };
 
