@@ -25,7 +25,7 @@ impl Error {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) enum AuthError {
+pub enum AuthError {
     DataMismatch,
     InvalidData,
     InvalidToken,
