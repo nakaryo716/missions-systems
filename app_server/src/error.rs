@@ -16,7 +16,7 @@ pub struct Error {
 }
 
 impl Error {
-    fn new(code: u32, message: &str) -> Self {
+    pub(crate) fn new(code: u32, message: &str) -> Self {
         Self {
             code,
             message: message.to_string(),
@@ -538,16 +538,16 @@ impl ErrorRes {
 
     const USER_NOT_FOUND: (StatusCode, u32, &str) =
         { (StatusCode::NOT_FOUND, 105, "User not found") };
-        
+
     const WRONG_PASSWORD: (StatusCode, u32, &str) =
-    { (StatusCode::BAD_REQUEST, 106, "Wrong password") };
-        
+        { (StatusCode::BAD_REQUEST, 106, "Wrong password") };
+
     const VALIDATION: (StatusCode, u32, &str) =
-    { (StatusCode::BAD_REQUEST, 107, "Validation error") };
-        
-    const ENTITY_NOT_FOUND: (StatusCode, u32, &str) = 
+        { (StatusCode::BAD_REQUEST, 107, "Validation error") };
+
+    const ENTITY_NOT_FOUND: (StatusCode, u32, &str) =
         { (StatusCode::NOT_FOUND, 108, "Entity not found") };
-        
+
     const EXP_OVERFLOW: (StatusCode, u32, &str) =
         { (StatusCode::BAD_REQUEST, 200, "Exp is fulled") };
 
