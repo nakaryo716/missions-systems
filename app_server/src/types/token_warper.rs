@@ -1,8 +1,6 @@
-use axum::extract::FromRequestParts;
-use axum_extra::extract::CookieJar;
+use axum::{body::Bytes, extract::FromRequestParts, Json};
 use domain::entity::token::Token;
-
-use crate::error::AuthError;
+use http::{header::AUTHORIZATION, StatusCode};
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -12,10 +10,11 @@ impl<S> FromRequestParts<S> for TokenWrap
 where
     S: Send + Sync,
 {
-    type Rejection = crate::error::AuthError;
+    type Rejection = (StatusCode, Json<crate::error::Error>);
+
     fn from_request_parts<'life0, 'life1, 'async_trait>(
         parts: &'life0 mut axum::http::request::Parts,
-        state: &'life1 S,
+        _state: &'life1 S,
     ) -> ::core::pin::Pin<
         Box<
             dyn ::core::future::Future<Output = Result<Self, Self::Rejection>>
@@ -29,16 +28,30 @@ where
         Self: 'async_trait,
     {
         Box::pin(async move {
-            let jar = CookieJar::from_request_parts(parts, state)
-                .await
-                .map_err(|_| AuthError::InvalidToken)?;
-            match jar.get("token") {
-                Some(cookie) => {
-                    let v = cookie.value();
-                    let token = TokenWrap(Token(v.to_string()));
-                    Ok(token)
+            // AUTHORIZATIONヘッダから値を取得
+            match parts
+                .headers
+                .get(AUTHORIZATION)
+                .and_then(|v| v.to_str().ok())
+            {
+                Some(val) => {
+                    // AUTHORIZATIONヘッダの値は"Bearer <TOKEN>"の形式でBearer+空白の部分はいらない
+                    // スライスをとってTOKEN部分だけを抽出する
+                    let header_val_bytes = Bytes::from(val.to_owned());
+                    let header_slice = header_val_bytes.slice(7..);
+                    // String型に変換
+                    let token = String::from_utf8(header_slice.to_vec()).map_err(|_| {
+                        (
+                            StatusCode::UNAUTHORIZED,
+                            Json(crate::error::Error::new(0, "Please include a valid Bearer token in the Authorization header")),
+                        )
+                    })?;
+                    Ok(TokenWrap(Token(token)))
                 }
-                None => Err(AuthError::InvalidToken),
+                None => Err((
+                    StatusCode::UNAUTHORIZED,
+                    Json(crate::error::Error::new(0, "Authorization header is missing. Please include a valid Bearer token in the Authorization header.")),
+                )),
             }
         })
     }

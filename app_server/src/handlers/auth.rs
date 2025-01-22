@@ -1,9 +1,7 @@
 use std::time::Duration;
 
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use axum_extra::extract::CookieJar;
 use chrono::Local;
-use cookie::{CookieBuilder, SameSite};
 use domain::{entity::auth_request::AuthRequest, service::auth_service::AuthService};
 use infrastructure::{
     repository::user_repository_impl::UserRepositoryImpl,
@@ -13,10 +11,9 @@ use infrastructure::{
 };
 use sqlx::MySqlPool;
 
-use crate::error::AuthError;
+use crate::{error::AuthError, types::jwt::JWT};
 
 pub async fn login(
-    jar: CookieJar,
     State(pool): State<MySqlPool>,
     Json(auth_payload): Json<AuthRequest>,
 ) -> Result<impl IntoResponse, AuthError> {
@@ -29,13 +26,7 @@ pub async fn login(
     );
 
     let token = service.login(auth_payload).await?;
-
-    let cookie = CookieBuilder::new("token", token.0)
-        .http_only(true)
-        .secure(true)
-        .same_site(SameSite::None)
-        .build();
-    Ok((jar.add(cookie), StatusCode::OK))
+    Ok((StatusCode::OK, Json(JWT::new(token))))
 }
 
 fn token_exp() -> usize {
