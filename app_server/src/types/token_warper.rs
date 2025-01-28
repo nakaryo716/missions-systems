@@ -1,6 +1,9 @@
-use axum::{body::Bytes, extract::FromRequestParts, Json};
+use axum::{extract::FromRequestParts, Json};
+use axum_extra::extract::CookieJar;
 use domain::entity::token::Token;
-use http::{header::AUTHORIZATION, StatusCode};
+use http::StatusCode;
+
+use crate::COOKIE_KEY;
 
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
@@ -14,7 +17,7 @@ where
 
     fn from_request_parts<'life0, 'life1, 'async_trait>(
         parts: &'life0 mut axum::http::request::Parts,
-        _state: &'life1 S,
+        state: &'life1 S,
     ) -> ::core::pin::Pin<
         Box<
             dyn ::core::future::Future<Output = Result<Self, Self::Rejection>>
@@ -28,30 +31,18 @@ where
         Self: 'async_trait,
     {
         Box::pin(async move {
-            // AUTHORIZATIONヘッダから値を取得
-            match parts
-                .headers
-                .get(AUTHORIZATION)
-                .and_then(|v| v.to_str().ok())
-            {
+        let err = (StatusCode::UNAUTHORIZED, Json(crate::error::Error::new(0, "token not found")));
+
+        let jar = CookieJar::from_request_parts(parts, state)
+            .await
+            .map_err(|_| err.clone())?;
+
+        match jar.get(COOKIE_KEY) {
                 Some(val) => {
-                    // AUTHORIZATIONヘッダの値は"Bearer <TOKEN>"の形式でBearer+空白の部分はいらない
-                    // スライスをとってTOKEN部分だけを抽出する
-                    let header_val_bytes = Bytes::from(val.to_owned());
-                    let header_slice = header_val_bytes.slice(7..);
-                    // String型に変換
-                    let token = String::from_utf8(header_slice.to_vec()).map_err(|_| {
-                        (
-                            StatusCode::UNAUTHORIZED,
-                            Json(crate::error::Error::new(0, "Please include a valid Bearer token in the Authorization header")),
-                        )
-                    })?;
-                    Ok(TokenWrap(Token(token)))
+                    let token = val.value_trimmed();
+                    Ok(TokenWrap(Token(token.to_owned())))
                 }
-                None => Err((
-                    StatusCode::UNAUTHORIZED,
-                    Json(crate::error::Error::new(0, "Authorization header is missing. Please include a valid Bearer token in the Authorization header.")),
-                )),
+                None => Err(err),
             }
         })
     }

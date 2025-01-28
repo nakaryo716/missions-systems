@@ -6,6 +6,8 @@ mod handlers;
 mod router;
 mod types;
 
+static COOKIE_KEY: &str = "token";
+
 #[tokio::main]
 async fn main() {
     let allow_origin = dotenvy::var("ALLOW_ORIGIN").expect("Failed to get cors data");
