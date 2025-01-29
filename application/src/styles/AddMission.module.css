@@ -1,0 +1,23 @@
+.content {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.input {
+    width: 50%;
+    margin: 0 auto;
+    min-width: 350px;
+    margin-bottom: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.icon {
+    display: flex;
+    justify-content: center;
+    margin-right: 10;
+}

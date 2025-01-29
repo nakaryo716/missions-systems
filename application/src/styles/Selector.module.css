@@ -1,0 +1,12 @@
+.container {
+    background-color: #3c414b;    
+}
+
+.tabs {
+    background-color: #3c414b;
+    color: inherit;
+}
+
+.tab {
+    font-family: "Noto Sans Mono";
+}

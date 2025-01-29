@@ -1,0 +1,21 @@
+.header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.selector {
+  z-index: 100;
+  top: 0;
+  position: sticky;
+  background-color: white;
+  
+}
+
+.content {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  min-height: 100vh;
+  justify-content: center;
+}

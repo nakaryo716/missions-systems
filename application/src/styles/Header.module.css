@@ -1,0 +1,10 @@
+.content {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+}
+
+.logo {
+    align-items: center;
+    display: flex;
+}
