@@ -1,0 +1,31 @@
+.container {
+    display: flex;
+    flex-flow: column;
+    justify-content: center;
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.level{
+    color: #dead2b;
+    font-size: 4rem;
+}
+
+.data {
+    /* float: left; */
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.title {
+    font-size: 2rem;
+    color: #515b5e;
+}
+
+.num {
+    font-size: 2rem;
+    color: #dead2b;
+}
