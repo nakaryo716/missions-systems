@@ -17,26 +17,26 @@ use crate::handlers::{auth, combine, daily_mission, exp, user};
 pub fn app(pool: MySqlPool, allow_origin: &str) -> Router {
     Router::new()
         .route(
-            "/user",
+            "/api/user",
             post(user::create_and_exp_init)
                 .get(user::user_info)
                 .put(user::update_name)
                 .delete(user::delete),
         )
-        .route("/login", post(auth::login))
+        .route("/api/login", post(auth::login))
         .route(
-            "/daily",
+            "/api/daily",
             post(daily_mission::create).get(daily_mission::get_all),
         )
         .route(
-            "/daily/:id",
+            "/api/daily/:id",
             get(daily_mission::get_one)
                 .put(daily_mission::update)
                 .delete(daily_mission::delete),
         )
-        .route("/exp", get(exp::find))
+        .route("/api/exp", get(exp::find))
         .route(
-            "/daily/complete/:id",
+            "/api/daily/complete/:id",
             put(combine::set_complete_with_add_exp),
         )
         .with_state(pool)
