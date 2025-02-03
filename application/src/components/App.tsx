@@ -7,7 +7,23 @@ import MissionsList from "@/components/MissionsList";
 import AddMission from "@/components/AddMission";
 import Status from "@/components/Status"
 
-const App = () => {
+type AppProps = {
+  // ミッション追加のProps
+  title: string,
+  setTitle: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  description: null | string;
+  setDescription: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  submitHandle: () => Promise<void>;
+}
+const App = (props: AppProps) => {
+  const {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    submitHandle,
+  } = props;
+
   const [selectorVal, setSelectorVal] = useState(0);
 
   const handleSelectorChange = (_e: React.SyntheticEvent<Element, Event>, newValue: number) => {
@@ -61,7 +77,13 @@ const App = () => {
       selectedComponent = <MissionsList missions={missions} />;
       break;
     case 1:
-      selectedComponent = <AddMission />;
+      selectedComponent = <AddMission 
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        submitHandle={submitHandle}
+      />;
       break;
     case 2:
       selectedComponent = <Status />;
