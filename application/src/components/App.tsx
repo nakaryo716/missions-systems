@@ -6,6 +6,7 @@ import Selector from "@/components/Selector";
 import MissionsList from "@/components/MissionsList";
 import AddMission from "@/components/AddMission";
 import Status from "@/components/Status"
+import { DailyMission } from "@/types/DailyMission";
 
 type AppProps = {
   // ミッション追加のProps
@@ -14,6 +15,7 @@ type AppProps = {
   description: null | string;
   setDescription: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   submitHandle: () => Promise<void>;
+  missions: DailyMission[];
 }
 const App = (props: AppProps) => {
   const {
@@ -22,6 +24,7 @@ const App = (props: AppProps) => {
     description,
     setDescription,
     submitHandle,
+    missions
   } = props;
 
   const [selectorVal, setSelectorVal] = useState(0);
@@ -29,47 +32,6 @@ const App = (props: AppProps) => {
   const handleSelectorChange = (_e: React.SyntheticEvent<Element, Event>, newValue: number) => {
     setSelectorVal(newValue);
   };
-
-  const mission: DailyMission = {
-    userId: "hi",
-    missionId: "1",
-    title: "本を読む",
-    description: "技術書をよむ",
-    isComplete: true,
-  };
-
-  const mission2: DailyMission = {
-    userId: "hi",
-    missionId: "2",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-
-  const mission3: DailyMission = {
-    userId: "hi",
-    missionId: "3",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-  const mission4: DailyMission = {
-    userId: "hi",
-    missionId: "4",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  }; 
-   const mission5: DailyMission = {
-    userId: "hi",
-    missionId: "5",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-
-
-  const missions = [mission, mission2, mission3, mission4, mission5];
 
   let selectedComponent;
   switch (selectorVal) {

@@ -1,6 +1,7 @@
 import { List, ListItem } from "@mui/material";
 import Mission from "./Mission";
 import style from "../styles/MissionsList.module.css"
+import { DailyMission } from "@/types/DailyMission";
 
 type MissionsListProps = {
   missions: DailyMission[];

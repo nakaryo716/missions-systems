@@ -1,6 +1,7 @@
 'use client'
 import createMissionApi from "@/api/createMissionApi";
-import getUserInfoApi from "@/api/userInfoApi";
+import getMissionApi from "@/api/getMissionApi";
+import { DailyMission } from "@/types/DailyMission";
 import App from "@/components/App";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,17 +10,23 @@ export default function Root() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
 
+  // 初回ローディング時にAPIを叩いて、Missionを取得しsetする
+  // 取得できなかった場合はログインページにリダイレクトする
+  // TODO:認証してない場合は/login、サーバーなどの問題のときはエラーメッセージを表示する
+  const [missions, setMissions] = useState<DailyMission[]>([]);
   useEffect(() => {
-    getUserInfoApi().then(res => {
+    const handleGetMissions = async () => {
+      const res = await getMissionApi();
       if (!res.ok) {
-        console.error(res.err);
         router.push("/login");
         return;
+      } else {
+        setMissions(res.value);
+        setLoading(false);
+        return;
       }
-      console.log(res.value);
-      setLoading(false);
-      return;
-    })
+    };
+    handleGetMissions();
   }, [router]);
 
   // ミッション追加の実装
@@ -35,6 +42,15 @@ export default function Root() {
     setMissionDescription(e.target.value);
   };
 
+  // ミッションが追加された時に再度取得するためのハンドラ
+  const handleGetMissions = async () => {
+    const res = await getMissionApi();
+    if (!res.ok) {
+      router.push("/login");
+    } else {
+      setMissions(res.value);
+    }
+  };
   // ミッションを追加するためのハンドラ
   const handleAddMission = async () => {
     // ペイロードの作成
@@ -44,7 +60,8 @@ export default function Root() {
     };
     // API call
     const res = await createMissionApi(payload);
-
+    // TODO: ミッションは最大7個まで登録できる
+    //       8個以上になったらエラーメッセージを表示させる
     if (!res.ok) {
       setErr("ミッションの追加に失敗しました");
       console.error(err);
@@ -52,6 +69,8 @@ export default function Root() {
     // 初期化
     setMissionTitle("");
     setMissionDescription(null);
+    // Missionを再度取得する
+    handleGetMissions();
     return;
   }
 
@@ -68,6 +87,7 @@ export default function Root() {
           description={missionDescription}
           setDescription={handleSetDescription}
           submitHandle={handleAddMission}
+          missions={missions}
         />
       }
     </>
