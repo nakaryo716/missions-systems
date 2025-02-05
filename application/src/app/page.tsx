@@ -6,6 +6,7 @@ import App from "@/components/App";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { levelApi } from "@/api/levelApi";
+import missionCompleteApi from "@/api/missionCompleteApi";
 
 export default function Root() {
   const router = useRouter();
@@ -91,6 +92,28 @@ export default function Root() {
     return;
   }
 
+  const handleGetStatus = async () => {
+    const res = await levelApi();
+    if (!res.ok) {
+      alert("通信に失敗しました");
+      return;
+    } else {
+      setUserStatus(res.value);
+      return;
+    }
+  }
+
+  // ミッションをコンプリートにするハンドラ
+  const handleCompleteMission = async (id: string) => {
+    const res = await missionCompleteApi(id);
+    if (!res.ok) {
+      alert("通信に失敗しました");
+    }
+    // 再度ミッションとレベルを取得する
+    handleGetMissions();
+    handleGetStatus();
+  };
+
   return(
     <>
       {
@@ -106,6 +129,7 @@ export default function Root() {
           submitHandle={handleAddMission}
           missions={missions}
           userStatus={userStatus}
+          handleComplete={handleCompleteMission}
         />
       }
     </>

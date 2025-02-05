@@ -5,15 +5,16 @@ import { DailyMission } from "@/types/DailyMission";
 
 type MissionsListProps = {
   missions: DailyMission[];
+  handleComplete: (id: string) => Promise<void>;
 }
-const MissionsList = ({ missions }: MissionsListProps) => {
+const MissionsList = ({ missions, handleComplete }: MissionsListProps) => {
   return (
     <List className={style.c}>
       {
         missions.filter(v => !v.isComplete).map(v => {
           return (
             <ListItem key={v.missionId}>
-              <Mission mission={v}/>
+              <Mission mission={v} handleClick={handleComplete}/>
             </ListItem>
           );
         })
@@ -22,7 +23,7 @@ const MissionsList = ({ missions }: MissionsListProps) => {
         missions.filter(v => v.isComplete).map(v => {
           return (
             <ListItem key={v.missionId}>
-              <Mission mission={v} />
+              <Mission mission={v} handleClick={handleComplete}/>
             </ListItem>
           );
         })

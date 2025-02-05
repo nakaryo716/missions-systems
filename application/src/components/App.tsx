@@ -17,6 +17,7 @@ type AppProps = {
   submitHandle: () => Promise<void>;
   missions: DailyMission[];
   userStatus: null | Level;
+  handleComplete: (id: string) => Promise<void>;
 }
 const App = (props: AppProps) => {
   const {
@@ -27,6 +28,7 @@ const App = (props: AppProps) => {
     submitHandle,
     missions,
     userStatus,
+    handleComplete,
   } = props;
 
   const [selectorVal, setSelectorVal] = useState(0);
@@ -38,7 +40,7 @@ const App = (props: AppProps) => {
   let selectedComponent;
   switch (selectorVal) {
     case 0:
-      selectedComponent = <MissionsList missions={missions} />;
+      selectedComponent = <MissionsList missions={missions} handleComplete={handleComplete}/>;
       break;
     case 1:
       selectedComponent = <AddMission 
