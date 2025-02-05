@@ -5,6 +5,7 @@ import { DailyMission } from "@/types/DailyMission";
 import App from "@/components/App";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { levelApi } from "@/api/levelApi";
 
 export default function Root() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function Root() {
   // 取得できなかった場合はログインページにリダイレクトする
   // TODO:認証してない場合は/login、サーバーなどの問題のときはエラーメッセージを表示する
   const [missions, setMissions] = useState<DailyMission[]>([]);
+  const [userStatus, setUserStatus] = useState<null | Level>(null);
+
   useEffect(() => {
     const handleGetMissions = async () => {
       const res = await getMissionApi();
@@ -26,7 +29,21 @@ export default function Root() {
         return;
       }
     };
+
+    const handleGetStatus = async () => {
+      const res = await levelApi();
+      if (!res.ok) {
+        router.push("/login");
+        return;
+      } else {
+        setUserStatus(res.value);
+        setLoading(false);
+        return;
+      }
+    }
+
     handleGetMissions();
+    handleGetStatus();
   }, [router]);
 
   // ミッション追加の実装
@@ -88,6 +105,7 @@ export default function Root() {
           setDescription={handleSetDescription}
           submitHandle={handleAddMission}
           missions={missions}
+          userStatus={userStatus}
         />
       }
     </>

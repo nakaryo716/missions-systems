@@ -16,6 +16,7 @@ type AppProps = {
   setDescription: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   submitHandle: () => Promise<void>;
   missions: DailyMission[];
+  userStatus: null | Level;
 }
 const App = (props: AppProps) => {
   const {
@@ -24,7 +25,8 @@ const App = (props: AppProps) => {
     description,
     setDescription,
     submitHandle,
-    missions
+    missions,
+    userStatus,
   } = props;
 
   const [selectorVal, setSelectorVal] = useState(0);
@@ -48,7 +50,7 @@ const App = (props: AppProps) => {
       />;
       break;
     case 2:
-      selectedComponent = <Status />;
+      selectedComponent = <Status userStatus={userStatus}/>;
       break;
   };
 
