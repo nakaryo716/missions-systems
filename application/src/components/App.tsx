@@ -6,65 +6,53 @@ import Selector from "@/components/Selector";
 import MissionsList from "@/components/MissionsList";
 import AddMission from "@/components/AddMission";
 import Status from "@/components/Status"
+import { DailyMission } from "@/types/DailyMission";
 
-const App = () => {
+type AppProps = {
+  // ミッション追加のProps
+  title: string,
+  setTitle: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  description: null | string;
+  setDescription: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  submitHandle: () => Promise<void>;
+  missions: DailyMission[];
+  userStatus: null | Level;
+  handleComplete: (id: string) => Promise<void>;
+}
+const App = (props: AppProps) => {
+  const {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    submitHandle,
+    missions,
+    userStatus,
+    handleComplete,
+  } = props;
+
   const [selectorVal, setSelectorVal] = useState(0);
 
   const handleSelectorChange = (_e: React.SyntheticEvent<Element, Event>, newValue: number) => {
     setSelectorVal(newValue);
   };
 
-  const mission: DailyMission = {
-    userId: "hi",
-    missionId: "1",
-    title: "本を読む",
-    description: "技術書をよむ",
-    isComplete: true,
-  };
-
-  const mission2: DailyMission = {
-    userId: "hi",
-    missionId: "2",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-
-  const mission3: DailyMission = {
-    userId: "hi",
-    missionId: "3",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-  const mission4: DailyMission = {
-    userId: "hi",
-    missionId: "4",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  }; 
-   const mission5: DailyMission = {
-    userId: "hi",
-    missionId: "5",
-    title: "ランニング",
-    description: "2km走る",
-    isComplete: false,
-  };
-
-
-  const missions = [mission, mission2, mission3, mission4, mission5];
-
   let selectedComponent;
   switch (selectorVal) {
     case 0:
-      selectedComponent = <MissionsList missions={missions} />;
+      selectedComponent = <MissionsList missions={missions} handleComplete={handleComplete}/>;
       break;
     case 1:
-      selectedComponent = <AddMission />;
+      selectedComponent = <AddMission 
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        submitHandle={submitHandle}
+      />;
       break;
     case 2:
-      selectedComponent = <Status />;
+      selectedComponent = <Status userStatus={userStatus}/>;
       break;
   };
 
