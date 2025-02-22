@@ -130,6 +130,7 @@ export default function Root() {
           missions={missions}
           userStatus={userStatus}
           handleComplete={handleCompleteMission}
+          handleGetMission={handleGetMissions}
         />
       }
     </>

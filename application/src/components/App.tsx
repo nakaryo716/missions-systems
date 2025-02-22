@@ -18,6 +18,7 @@ type AppProps = {
   missions: DailyMission[];
   userStatus: null | Level;
   handleComplete: (id: string) => Promise<void>;
+  handleGetMission: () => Promise<void>;
 }
 const App = (props: AppProps) => {
   const {
@@ -29,6 +30,7 @@ const App = (props: AppProps) => {
     missions,
     userStatus,
     handleComplete,
+    handleGetMission,
   } = props;
 
   const [selectorVal, setSelectorVal] = useState(0);
@@ -40,7 +42,11 @@ const App = (props: AppProps) => {
   let selectedComponent;
   switch (selectorVal) {
     case 0:
-      selectedComponent = <MissionsList missions={missions} handleComplete={handleComplete}/>;
+      selectedComponent = <MissionsList
+        missions={missions}
+        handleComplete={handleComplete}
+        handleGetMission={handleGetMission}
+      />;
       break;
     case 1:
       selectedComponent = <AddMission 
