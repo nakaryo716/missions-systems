@@ -1,4 +1,4 @@
-type DailyMission = {
+export type DailyMission = {
   userId: string;
   missionId: string;
   title: string;
