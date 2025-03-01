@@ -11,7 +11,6 @@ const Status = ({userStatus}: StatusProps) => {
       <h1>Failed to get user status</h1>
     )
   }
-  // TODO: 現在はレベルと経験値を表示しているが、レベルを上げるのに必要な経験値を表示させる
   return (
     <div className={style.container}>
       <div className={style.data}>
@@ -23,10 +22,10 @@ const Status = ({userStatus}: StatusProps) => {
         <div></div>
         <h2 className={style.num}>{userStatus.experiencePoints}</h2>
       </div>
-      {/* <div className={style.data}>
-        <h2 className={style.title}>Next Exp.</h2>
-        <h2 className={style.num}>{110}</h2>
-      </div> */}
+      <div className={style.data}>
+        <h2 className={style.title}>Exp needed to level up&emsp;</h2>
+        <h2 className={style.num}>{userStatus.remain}</h2>
+      </div>
     </div>
   );
 }
