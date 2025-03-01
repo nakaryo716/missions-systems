@@ -10,6 +10,7 @@ pub struct UserLevel {
     pub user_id: UserId,
     pub experience_points: i64,
     pub level: u32,
+    pub remain: Option<u32>,
 }
 
 impl UserLevel {
@@ -17,10 +18,13 @@ impl UserLevel {
     where
         T: LevelConvert,
     {
+        // 現在のレベルとレベルアップに必要な経験値量を計算
+        let (level, remain) = converter.to_level_with_remain(user_exp.experience_points);
         Self {
             user_id: user_exp.user_id,
             experience_points: user_exp.experience_points,
-            level: converter.to_level(user_exp.experience_points),
+            level,
+            remain,
         }
     }
 }
