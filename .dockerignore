@@ -1,0 +1,4 @@
+./target
+./application/.next
+./application/node_modules
+README.md
