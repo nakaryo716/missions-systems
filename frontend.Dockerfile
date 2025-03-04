@@ -1,11 +1,11 @@
 FROM node:22.13-bookworm
 
-WORKDIR /app
-COPY ./application /app
+WORKDIR /application
+COPY ./application /application
 
-RUN  npm install
-# RUN npx next build
+RUN npm install
+RUN npx next build
 
-# EXPOSE 3000
+EXPOSE 3000
 
-# CMD [ "npx", "next", "start" ]
+CMD [ "npx", "next", "start" ]
