@@ -21,6 +21,7 @@ services:
       dockerfile: server.Dockerfile
     ports:
       - 8080:8080
+    command:  sh -c "make && /app/target/release/app_server" 
     depends_on:
       - db
     networks:

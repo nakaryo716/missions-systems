@@ -6,7 +6,7 @@ use domain::{
         daily_mission_repository::DailyMissionRepository, repository_error::RepositoryError,
     },
 };
-use sqlx::{MySql, MySqlPool, Row, Transaction};
+use sqlx::{mysql::MySqlRow, prelude::FromRow, types::chrono::{FixedOffset, NaiveDate, Utc}, MySql, MySqlPool, Row, Transaction};
 
 use super::to_repo_err;
 
@@ -76,45 +76,74 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         })
     }
 
+    // 今日のミッションを取得する
     fn find_by_id<'a>(
         &'a self,
         mission_id: &'a DailyMissionId,
         user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<DailyMission, RepositoryError>> + Send + 'a>> {
+        // 今日の日付を取得する(日本時間)
+        let current_date = current_date_jp();
         Box::pin(async move {
-            let mission = sqlx::query_as(
+            // daily_mission tableとmission_completed tableをJOINして
+            // DailyMissionRow型としてDBから取得し、DailyMissionに変換する
+            let mission: DailyMissionRow = sqlx::query_as(
                 r#"
-                    SELECT user_id, mission_id, title, descriptions, is_complete
-                    FROM daily_mission
-                    WHERE mission_id = ? && user_id = ?
+                SELECT
+                daily_mission.user_id,
+                daily_mission.mission_id,
+                daily_mission.title, 
+                daily_mission.descriptions AS description,
+                mission_completed.date
+                FROM daily_mission
+                LEFT JOIN mission_completed
+                ON daily_mission.mission_id = mission_completed.mission_id
+                AND mission_completed.date = ?
+                WHERE daily_mission.mission_id = ?
+                AND
+                daily_mission.user_id = ?
                 "#,
             )
+            .bind(&current_date)
             .bind(&mission_id.0)
             .bind(&user_id.0)
             .fetch_one(&self.pool)
             .await
             .map_err(to_repo_err)?;
-            Ok(mission)
+            Ok(mission.into())
         })
     }
 
+    // 今日のミッションすべてを取得する
     fn find_by_user_id<'a>(
         &'a self,
         user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<Vec<DailyMission>, RepositoryError>> + Send + 'a>> {
+        let current_date = current_date_jp();
+        // daily_mission tableとmission_completed tableをJOINして
+        // DailyMissionRowをDBから取得しDailyMissionに変換する
         Box::pin(async move {
-            let missions = sqlx::query_as(
+            let missions: Vec<DailyMissionRow> = sqlx::query_as(
                 r#"
-                    SELECT user_id, mission_id, title, descriptions, is_complete
+                    SELECT
+                    daily_mission.user_id,
+                    daily_mission.mission_id,
+                    daily_mission.title, 
+                    daily_mission.descriptions AS description,
+                    mission_completed.date
                     FROM daily_mission
-                    WHERE user_id = ?
+                    LEFT JOIN mission_completed
+                    ON daily_mission.mission_id = mission_completed.mission_id
+                    AND mission_completed.date = ?
+                    WHERE daily_mission.user_id = ?
                 "#,
             )
+            .bind(&current_date)
             .bind(&user_id.0)
             .fetch_all(&self.pool)
             .await
             .map_err(to_repo_err)?;
-            Ok(missions)
+            Ok(missions.into_iter().map(|f| f.into()).collect())
         })
     }
 
@@ -150,22 +179,26 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
         })
     }
 
+    // 今日のミッションを完了にする
     fn set_complete_true<'a>(
         &self,
         tx: &'a mut Transaction<'_, MySql>,
         mission_id: &'a DailyMissionId,
-        user_id: &'a UserId,
+        _user_id: &'a UserId,
     ) -> Pin<Box<dyn Future<Output = Result<(), RepositoryError>> + Send + 'a>> {
+        // 今日の日付を取得する(日本時間)
+        let current_date = current_date_jp();
         Box::pin(async move {
             let affected_len = sqlx::query(
                 r#"
-                UPDATE daily_mission
-                SET is_complete = true
-                WHERE mission_id = ? && user_id = ?
+                INSERT INTO mission_completed
+                (mission_id, date)
+                VALUES
+                (?, ?)
                 "#,
             )
             .bind(&mission_id.0)
-            .bind(&user_id.0)
+            .bind(&current_date)
             .execute(&mut **tx)
             .await
             .map_err(to_repo_err)?
@@ -204,6 +237,50 @@ impl DailyMissionRepository for DailyMissionRepositoryImpl {
                 Err(RepositoryError::NotFound)
             }
         })
+    }
+}
+
+static JP_OFFSET: i32 = 9 * 3600;
+fn current_date_jp() -> NaiveDate {
+    let jp_tz = FixedOffset::east_opt(JP_OFFSET).unwrap();
+    Utc::now().with_timezone(&jp_tz).date_naive()
+}
+
+/// DBのテーブルをJOINしたDBからのrowデータ
+/// daily_missionテーブルとmission_completedをLEFT JOINしている
+/// DailyMissionはDailyMissionRowによって生成できる
+#[derive(Debug, Clone)]
+struct DailyMissionRow {
+    user_id: UserId,
+    mission_id: DailyMissionId,
+    title: String,
+    description: Option<String>,
+    have_complete: Option<NaiveDate>,
+}
+
+impl<'r> FromRow<'r, MySqlRow> for DailyMissionRow {
+    fn from_row(row: &'r MySqlRow) -> Result<Self, sqlx::Error> {
+       Ok(
+        DailyMissionRow {
+            user_id: UserId(row.try_get("user_id")?),
+            mission_id: DailyMissionId(row.try_get("mission_id")?),
+            title: row.try_get("title")?,
+            description: row.try_get("description")?,
+            have_complete: row.try_get("date")?,
+        }
+       ) 
+    }
+}
+
+impl From<DailyMissionRow> for DailyMission {
+    fn from(value: DailyMissionRow) -> Self {
+        DailyMission {
+            user_id: value.user_id,
+            mission_id: value.mission_id,
+            title: value.title,
+            description: value.description,
+            is_complete: value.have_complete.is_some(),  
+        }
     }
 }
 
@@ -250,13 +327,12 @@ mod test {
         let user_id = format!("{}_{}", USER_ID, gen_random_string());
         create_test_user(&user_id).await?;
 
-        let daily_mission = gen_daily_mission(&user_id, Some("hi"));
         let service = DailyMissionRepositoryImpl::new(gen_pool().await?);
-
         for _ in 0..10 {
+            let daily_mission = gen_daily_mission(&user_id, Some("hi"));
             service.create(&daily_mission).await?;
         }
-
+        
         let count = service.count(&UserId(user_id.clone())).await?;
         assert_eq!(count, 10);
 
@@ -428,7 +504,7 @@ mod test {
 
     // Helper methods
     async fn gen_pool() -> MyResult<MySqlPool> {
-        let database_url = dotenvy::var("DATABASE_URL")?;
+        let database_url = dotenvy::var("TEST_DB_URL")?;
         let pool = MySqlPool::connect(&database_url).await?;
         Ok(pool)
     }

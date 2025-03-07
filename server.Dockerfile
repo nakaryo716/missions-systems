@@ -25,4 +25,3 @@ COPY ./migrations /app/migrations
 COPY Makefile /app/Makefile
 
 EXPOSE 8080
-CMD [ "sh", "-c", "make && /app/target/release/app_server" ]
