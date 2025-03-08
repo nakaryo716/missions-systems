@@ -1,6 +1,7 @@
 import { Button, TextField } from "@mui/material";
 import style from "../styles/Login.module.css";
 import LoginIcon from '@mui/icons-material/Login';
+import Link from "next/link";
 
 type LoginProps = {
   emailVal: string;
@@ -62,6 +63,7 @@ const Login = (props: LoginProps) => {
             Login
           </Button>
         </div>
+        <Link href="/signup" style={{color: "#dead2b"}}>サインアップはこちら</Link>
       </div>
     </div>
   );
