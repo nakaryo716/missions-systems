@@ -3,7 +3,6 @@ WORKDIR /app
 COPY ./domain /app/domain
 COPY ./infrastructure /app/infrastructure
 COPY ./app_server /app/app_server
-COPY ./mission_resetter /app/mission_resetter
 COPY Cargo.toml /app/Cargo.toml
 
 RUN cargo build -p app_server --release
