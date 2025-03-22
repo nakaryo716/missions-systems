@@ -1,12 +1,13 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 // ミッションの新規作成APIを呼ぶ
 export default async function createMissionApi(payload: DailyMissionInput): Promise<Result<null, ErrorCode>> {
   try {
     // CookieとJson payloadをともにAPIを叩く
-    const res = await fetch("http://localhost/api/daily", {
+    const res = await fetch(`${baseURL}/daily`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

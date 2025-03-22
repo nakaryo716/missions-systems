@@ -1,10 +1,11 @@
 import { Result } from "@/types/Result";
 import { ErrorCode } from "@/types/ErrorCode";
 import { ApiError } from "@/types/ApiError";
+import { baseURL } from "./baseURL";
 
 export default async function missionCompleteApi(missionId: string): Promise<Result<null, ErrorCode>>{
   try {
-    const res = await fetch(`http://localhost/api/daily/complete/${missionId}`, {
+    const res = await fetch(`${baseURL}/daily/complete/${missionId}`, {
       method: "PUT",
       credentials: "include",
     });

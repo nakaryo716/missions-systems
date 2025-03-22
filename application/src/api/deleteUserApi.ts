@@ -1,11 +1,12 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 // ユーザーを削除するAPI
 export default async function deleteUserApi(): Promise<Result<null, ErrorCode>> {
   try {
-    const res = await fetch("http://localhost/api/user", {
+    const res = await fetch(`${baseURL}/user`, {
       method: "DELETE",
       credentials: "include",
     });

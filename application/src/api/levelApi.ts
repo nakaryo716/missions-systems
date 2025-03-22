@@ -1,10 +1,11 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 export async function levelApi(): Promise<Result<Level, ErrorCode>> {
   try {
-    const res = await fetch("http://localhost/api/exp", {
+    const res = await fetch(`${baseURL}/exp`, {
       method: "GET",
       credentials: "include",
     });

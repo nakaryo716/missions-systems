@@ -1,10 +1,11 @@
 import { ApiError } from "@/types/ApiError";
 import { Login } from "@/types/Login";
+import { baseURL } from "./baseURL";
 
 export default async function loginApi(payload: Login): Promise<boolean> {    
   try {
     // call login api
-    const res = await fetch("http://localhost/api/login", {
+    const res = await fetch(`${baseURL}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

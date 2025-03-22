@@ -1,6 +1,7 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 // ユーザー名を変更するAPI
 // クエリパラメータで変更
@@ -8,7 +9,7 @@ export default async function updateUserApi(
   name: string
 ): Promise<Result<null, ErrorCode>> {
   try {
-    const res = await fetch(`http://localhost/api/user?user_name=${name}`, {
+    const res = await fetch(`${baseURL}/user?user_name=${name}`, {
       method: "PUT",
       credentials: "include",
     });
