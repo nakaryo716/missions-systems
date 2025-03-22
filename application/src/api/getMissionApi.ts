@@ -2,10 +2,11 @@ import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
 import { DailyMission } from "@/types/DailyMission";
+import { baseURL } from "./baseURL";
 
 export default async function getMissionApi(): Promise<Result<DailyMission[], ErrorCode>> {
   try {
-    const res = await fetch("http://localhost/api/daily", {
+    const res = await fetch(`${baseURL}/daily`, {
       method: "GET",
       credentials: "include",
     });

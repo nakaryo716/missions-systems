@@ -1,10 +1,11 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
+import { baseURL } from "./baseURL";
 
 export default async function signupApi(payload: CreateUser): Promise<[boolean, ErrorCode]> {
   // call api
   try {
-    const res = await fetch("http://localhost/api/user", {
+    const res = await fetch(`${baseURL}/user`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

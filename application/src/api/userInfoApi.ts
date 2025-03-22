@@ -2,12 +2,13 @@ import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
 import { UserInfo } from "@/types/UserInfo";
+import { baseURL } from "./baseURL";
 
 // Cookieに保存されているJWTをサーバーに渡してユーザー情報{userId, userName}を取得する
 export default async function getUserInfoApi(): Promise<Result<UserInfo, ErrorCode>> {
   try {
     // Cookieをサーバーに渡す
-    const res = await fetch("http://localhost/api/user", {
+    const res = await fetch(`${baseURL}/user`, {
       method: "GET",
       credentials: "include",
     });
