@@ -1,12 +1,13 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 export default async function deleteMissionApi(
   missionId: string,
 ): Promise<Result<null, ErrorCode>> {
   try {
-    const res = await fetch(`http://localhost/api/daily/${missionId}`, {
+    const res = await fetch(`${baseURL}/daily/${missionId}`, {
       method: "DELETE",
       credentials: "include",
     });

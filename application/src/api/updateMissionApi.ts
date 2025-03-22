@@ -1,13 +1,14 @@
 import { ApiError } from "@/types/ApiError";
 import { ErrorCode } from "@/types/ErrorCode";
 import { Result } from "@/types/Result";
+import { baseURL } from "./baseURL";
 
 export default async function updateMissionApi(
   missionId: string,
   mission: DailyMissionInput,
 ): Promise<Result<null, ErrorCode>> {
   try {
-    const res = await fetch(`http://localhost/api/daily/${missionId}`, {
+    const res = await fetch(`${baseURL}/daily/${missionId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
